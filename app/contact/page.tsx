@@ -138,13 +138,13 @@ export default function ContactPage() {
                                 <div className="bg-green-100 text-green-600 p-4 rounded-full mb-4">
                                     <CheckCircle size={48} />
                                 </div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">Message Sent!</h2>
-                                <p className="text-slate-600 mb-8">Thank you for reaching out. We will get back to you soon.</p>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-2">{t("messageSent")}</h2>
+                                <p className="text-slate-600 mb-8">{t("messageSuccess")}</p>
                                 <button 
                                     onClick={() => setSuccess(false)}
                                     className="text-green-700 font-bold hover:underline"
                                 >
-                                    Send another message
+                                    {t("sendAnother")}
                                 </button>
                             </div>
                         ) : (
@@ -203,7 +203,7 @@ export default function ContactPage() {
                                     ) : (
                                         <Send size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                                     )}
-                                    <span>{loading ? "Sending..." : t("sendMessage")}</span>
+                                    <span>{loading ? t("sending") : t("sendMessage")}</span>
                                 </button>
                             </form>
                         )}

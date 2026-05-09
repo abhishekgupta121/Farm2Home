@@ -56,3 +56,160 @@ body {
 .animate-float-reverse {
   animation: float-reverse 7s ease-in-out infinite;
 }
+
+@keyframes pulse-green {
+  0% { border-color: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+  50% { border-color: #16a34a; box-shadow: 0 0 12px rgba(22, 163, 74, 0.6); }
+  100% { border-color: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+}
+
+@keyframes pulse-pink {
+  0% { border-color: #db2777; box-shadow: 0 0 8px rgba(219, 39, 119, 0.4); }
+  50% { border-color: #be185d; box-shadow: 0 0 12px rgba(190, 24, 93, 0.6); }
+  100% { border-color: #db2777; box-shadow: 0 0 8px rgba(219, 39, 119, 0.4); }
+}
+
+.lighting-green {
+  animation: pulse-green 3s ease-in-out infinite;
+  border-width: 2px !important;
+}
+
+.lighting-pink {
+  animation: pulse-pink 3s ease-in-out infinite;
+  border-width: 2px !important;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-rolex {
+  background: rgba(8, 40, 8, 0.95); /* Even Deeper Forest Green */
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.text-gradient {
+  background: linear-gradient(to right, #16a34a, #15803d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes slow-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-slow-spin {
+  animation: slow-spin 20s linear infinite;
+}
+
+.bg-dot-pattern {
+  background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+@keyframes pulse-blob {
+  0% { transform: scale(1) translate(0, 0); border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  33% { transform: scale(1.1) translate(20px, -30px); border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  66% { transform: scale(0.9) translate(-20px, 20px); border-radius: 50% 40% 30% 60% / 40% 50% 60% 30%; }
+  100% { transform: scale(1) translate(0, 0); border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+}
+
+.animate-pulse-blob {
+  animation: pulse-blob 12s ease-in-out infinite;
+}
+
+.glare-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.glare-effect::after {
+  content: "";
+  position: absolute;
+  top: -150%;
+  left: -150%;
+  width: 300%;
+  height: 300%;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0) 45%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 55%,
+    transparent 100%
+  );
+  transition: all 0.6s ease;
+  pointer-events: none;
+}
+
+.glare-effect:hover::after {
+  top: -100%;
+  left: -100%;
+}
+
+/* Custom Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  border: 2px solid #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #16a34a;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.mesh-gradient {
+  background-color: #fcfdfa;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(34, 197, 94, 0.15) 0px, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(249, 115, 22, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(168, 85, 247, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 50%, rgba(236, 72, 153, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(20, 184, 166, 0.1) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(234, 179, 8, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
+}
+
+@keyframes particle-drift {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  25% { opacity: 0.3; }
+  75% { opacity: 0.3; }
+  100% { transform: translate(100px, -100px) rotate(360deg); opacity: 0; }
+}
+
+.particle {
+  position: absolute;
+  pointer-events: none;
+  animation: particle-drift 15s linear infinite;
+}
