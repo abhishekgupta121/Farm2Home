@@ -149,6 +149,8 @@ export default function ConsumerDashboard() {
                     <img 
                       src={crop.imageUrl} 
                       alt={crop.cropName} 
+                      loading="lazy"
+                      crossOrigin="anonymous"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                     />
                   ) : (

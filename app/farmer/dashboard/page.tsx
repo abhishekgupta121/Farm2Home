@@ -145,8 +145,21 @@ export default function FarmerDashboard() {
                       {listings.map((listing) => (
                         <tr key={listing._id} className="group hover:bg-slate-50/50 transition-colors">
                           <td className="py-5 pl-2">
-                            <div className="font-bold text-slate-900">{listing.cropName}</div>
-                            <div className="text-xs text-slate-500 uppercase tracking-tighter font-bold">{listing.category} • {listing.availableQuantityKg}kg</div>
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+                                {listing.imageUrl ? (
+                                  <img src={listing.imageUrl} alt={listing.cropName} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                    <Leaf size={20} />
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <div className="font-bold text-slate-900">{listing.cropName}</div>
+                                <div className="text-xs text-slate-500 uppercase tracking-tighter font-bold">{listing.category} • {listing.availableQuantityKg}kg</div>
+                              </div>
+                            </div>
                           </td>
                           <td className="py-5 text-center">
                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
