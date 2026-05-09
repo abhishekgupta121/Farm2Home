@@ -1,6 +1,7 @@
 "use client";
 
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { useState } from "react";
+import { Mail, Phone, MapPin, Send, Loader2, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
@@ -8,6 +9,47 @@ import { useLanguage } from "@/lib/LanguageContext";
 
 export default function ContactPage() {
     const { t } = useLanguage();
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState("");
+    const [formData, setFormData] = useState({
+        fullName: "",
+        phoneNumber: "",
+        message: "",
+    });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (error) setError("");
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+        setSuccess(false);
+
+        try {
+            const res = await fetch("/api/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Something went wrong");
+            }
+
+            setSuccess(true);
+            setFormData({ fullName: "", phoneNumber: "", message: "" });
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="relative min-h-screen py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -91,42 +133,80 @@ export default function ContactPage() {
 
                     {/* Contact Form */}
                     <div>
-                        <form className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">{t("fullName")}</label>
-                                <input
-                                    type="text"
-                                    placeholder="Rahul Kumar"
-                                    className="w-full bg-white/60 text-slate-800 border border-white focus:bg-white rounded-2xl px-5 py-4 focus:outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-400 transition-all placeholder:text-slate-400 shadow-sm"
-                                />
+                        {success ? (
+                            <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-green-50/50 rounded-3xl border border-green-100">
+                                <div className="bg-green-100 text-green-600 p-4 rounded-full mb-4">
+                                    <CheckCircle size={48} />
+                                </div>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-2">Message Sent!</h2>
+                                <p className="text-slate-600 mb-8">Thank you for reaching out. We will get back to you soon.</p>
+                                <button 
+                                    onClick={() => setSuccess(false)}
+                                    className="text-green-700 font-bold hover:underline"
+                                >
+                                    Send another message
+                                </button>
                             </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                {error && (
+                                    <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-medium">
+                                        {error}
+                                    </div>
+                                )}
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">{t("fullName")}</label>
+                                    <input
+                                        type="text"
+                                        name="fullName"
+                                        value={formData.fullName}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="Rahul Kumar"
+                                        className="w-full bg-white/60 text-slate-800 border border-white focus:bg-white rounded-2xl px-5 py-4 focus:outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-400 transition-all placeholder:text-slate-400 shadow-sm"
+                                    />
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">{t("phoneNumber")}</label>
-                                <input
-                                    type="tel"
-                                    placeholder="+91 98765 43210"
-                                    className="w-full bg-white/60 text-slate-800 border border-white focus:bg-white rounded-2xl px-5 py-4 focus:outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-400 transition-all placeholder:text-slate-400 shadow-sm"
-                                />
-                            </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">{t("phoneNumber")}</label>
+                                    <input
+                                        type="tel"
+                                        name="phoneNumber"
+                                        value={formData.phoneNumber}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="+91 98765 43210"
+                                        className="w-full bg-white/60 text-slate-800 border border-white focus:bg-white rounded-2xl px-5 py-4 focus:outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-400 transition-all placeholder:text-slate-400 shadow-sm"
+                                    />
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">{t("message")}</label>
-                                <textarea
-                                    rows={4}
-                                    placeholder={t("messagePlaceholder")}
-                                    className="w-full bg-white/60 text-slate-800 border border-white focus:bg-white rounded-2xl px-5 py-4 focus:outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-400 transition-all placeholder:text-slate-400 shadow-sm resize-none"
-                                ></textarea>
-                            </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">{t("message")}</label>
+                                    <textarea
+                                        rows={4}
+                                        name="message"
+                                        value={formData.message}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder={t("messagePlaceholder")}
+                                        className="w-full bg-white/60 text-slate-800 border border-white focus:bg-white rounded-2xl px-5 py-4 focus:outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-400 transition-all placeholder:text-slate-400 shadow-sm resize-none"
+                                    ></textarea>
+                                </div>
 
-                            <button
-                                type="button"
-                                className="group w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 hover:-translate-y-1"
-                            >
-                                <Send size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                                <span>{t("sendMessage")}</span>
-                            </button>
-                        </form>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="group w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 disabled:from-slate-400 disabled:to-slate-300 text-white font-bold py-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 hover:-translate-y-1"
+                                >
+                                    {loading ? (
+                                        <Loader2 size={20} className="animate-spin" />
+                                    ) : (
+                                        <Send size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                    )}
+                                    <span>{loading ? "Sending..." : t("sendMessage")}</span>
+                                </button>
+                            </form>
+                        )}
                     </div>
 
                 </div>
