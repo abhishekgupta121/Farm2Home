@@ -46,6 +46,17 @@ export default function FarmerHomePage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const setSampleImage = (url: string) => {
     setFormData(prev => ({ ...prev, imageUrl: url }));
   };
@@ -139,54 +150,65 @@ export default function FarmerHomePage() {
                 />
               </div>
 
-              {/* Image URL */}
+              {/* Image Upload */}
               <div className="sm:col-span-2">
-                <label htmlFor="imageUrl" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
-                  Crop Image URL
+                <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                  Crop Image (Upload or Select Sample)
                 </label>
-                <input
-                  type="url"
-                  id="imageUrl"
-                  name="imageUrl"
-                  value={formData.imageUrl}
-                  onChange={handleChange}
-                  className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm placeholder:text-slate-400"
-                  placeholder="https://example.com/crop-image.jpg"
-                />
                 
-                {/* Quick Select Images */}
-                <div className="mt-4">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Quick Select Sample Images</p>
-                  <div className="flex flex-wrap gap-3">
-                    {SAMPLE_IMAGES.map((img) => (
-                      <button
-                        key={img.url}
-                        type="button"
-                        onClick={() => setSampleImage(img.url)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                          formData.imageUrl === img.url 
-                          ? "bg-green-600 text-white border-green-600 shadow-lg shadow-green-500/20" 
-                          : "bg-white text-slate-600 border-slate-200 hover:border-green-500 hover:text-green-600"
-                        }`}
-                      >
-                        <div className="w-6 h-6 rounded-lg bg-slate-100 overflow-hidden shrink-0">
-                          <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* File Upload Input */}
+                  <div className="flex-1">
+                    <label className="relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-slate-300 rounded-[2rem] cursor-pointer bg-slate-50 hover:bg-slate-100 hover:border-green-400 transition-all group overflow-hidden">
+                      {formData.imageUrl ? (
+                        <div className="absolute inset-0">
+                          <img src={formData.imageUrl} alt="Uploaded" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-white font-bold text-sm">Click to Change</span>
+                          </div>
                         </div>
-                        {img.name}
-                      </button>
-                    ))}
+                      ) : (
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <div className="bg-white p-3 rounded-2xl shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                            <ImageIcon className="text-green-600" size={24} />
+                          </div>
+                          <p className="mb-1 text-sm text-slate-600 font-bold">Click to Upload Photo</p>
+                          <p className="text-xs text-slate-400">PNG, JPG or JPEG</p>
+                        </div>
+                      )}
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handleFileChange}
+                      />
+                    </label>
                   </div>
-                </div>
 
-                {/* Preview */}
-                {formData.imageUrl && (
-                  <div className="mt-4 rounded-2xl overflow-hidden border border-slate-200 h-40 relative group">
-                    <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <p className="text-white text-xs font-bold uppercase tracking-widest">Image Preview</p>
+                  {/* Sample Selection */}
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Quick Select Sample Photos</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {SAMPLE_IMAGES.map((img) => (
+                        <button
+                          key={img.url}
+                          type="button"
+                          onClick={() => setSampleImage(img.url)}
+                          className={`flex items-center gap-2 p-2 rounded-xl text-[10px] font-bold transition-all border ${
+                            formData.imageUrl === img.url 
+                            ? "bg-green-600 text-white border-green-600 shadow-md" 
+                            : "bg-white text-slate-600 border-slate-100 hover:border-green-500 hover:text-green-600"
+                          }`}
+                        >
+                          <div className="w-6 h-6 rounded-md bg-slate-100 overflow-hidden shrink-0">
+                            <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                          </div>
+                          {img.name}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Category */}

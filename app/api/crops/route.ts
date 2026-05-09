@@ -14,7 +14,8 @@ export async function GET(req: Request) {
     let query: any = {};
     if (pinCode) {
       query.pinCode = pinCode;
-      query.status = "active";
+      // Allow both active and pre-booked crops to be discovered by consumers
+      query.status = { $in: ["active", "pre-booked"] };
     }
     if (farmerId) {
       query.farmerId = farmerId;
