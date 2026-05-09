@@ -1,7 +1,8 @@
 import "./globals.css";
+import { LanguageProvider } from "@/lib/LanguageContext";
 
 export const metadata = {
-  title: "KisanMandi",
+  title: "Farm2Home",
   description: "Smart Farmer Marketplace",
 };
 
@@ -13,7 +14,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );
