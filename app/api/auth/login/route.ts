@@ -42,6 +42,8 @@ export async function POST(req: Request) {
       mobileNumber: user.mobileNumber,
       role: user.role,
       farmName: user.farmName,
+      pinCode: user.pinCode,
+      address: user.address,
     };
 
     return NextResponse.json(

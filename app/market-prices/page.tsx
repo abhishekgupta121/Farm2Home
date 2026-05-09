@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -58,16 +58,31 @@ const getCrops = (t: any) => [
 
 export default function MarketPricesPage() {
   const [selectedCrop, setSelectedCrop] = useState("wheat");
+  const [isLoading, setIsLoading] = useState(false);
+  const [marketData, setMarketData] = useState<{ month: string; price: number }[] | null>(null);
   const { t } = useLanguage();
 
   const crops = getCrops(t);
-  const data = MOCK_DATA[selectedCrop];
 
-  // Calculate trends
-  const currentPrice = data[data.length - 1].price;
-  const previousPrice = data[data.length - 2].price;
+  // Simulate fetching data from an external API
+  useEffect(() => {
+    setIsLoading(true);
+    setMarketData(null);
+    
+    const fetchMarketData = async () => {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setMarketData(MOCK_DATA[selectedCrop]);
+      setIsLoading(false);
+    };
+
+    fetchMarketData();
+  }, [selectedCrop]);
+
+  const currentPrice = marketData ? marketData[marketData.length - 1].price : 0;
+  const previousPrice = marketData ? marketData[marketData.length - 2].price : 0;
   const priceChange = currentPrice - previousPrice;
-  const percentChange = ((priceChange / previousPrice) * 100).toFixed(2);
+  const percentChange = previousPrice ? ((priceChange / previousPrice) * 100).toFixed(2) : "0.00";
   const isPositive = priceChange >= 0;
 
   return (
@@ -122,93 +137,100 @@ export default function MarketPricesPage() {
         </div>
 
         {/* Stats Row with Glassmorphism */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-slate-200/60 relative overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/20 to-transparent rounded-full -mr-10 -mt-10 blur-2xl"></div>
-            <p className="text-slate-500 font-semibold mb-2">{t("currentPricePerQuintal")}</p>
-            <div className="flex items-end gap-4">
-              <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">₹{currentPrice}</h3>
-              <div className={`flex items-center px-2.5 py-1 rounded-lg text-sm font-bold mb-1.5 ${isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {isPositive ? <ArrowUpRight size={16} className="mr-1"/> : <ArrowDownRight size={16} className="mr-1"/>}
-                {Math.abs(Number(percentChange))}%
+        {isLoading || !marketData ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin w-12 h-12 border-4 border-white/20 border-t-white rounded-full"></div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-slate-200/60 relative overflow-hidden group hover:shadow-md transition-shadow">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/20 to-transparent rounded-full -mr-10 -mt-10 blur-2xl"></div>
+                <p className="text-slate-500 font-semibold mb-2">{t("currentPricePerQuintal")}</p>
+                <div className="flex items-end gap-4">
+                  <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">₹{currentPrice}</h3>
+                  <div className={`flex items-center px-2.5 py-1 rounded-lg text-sm font-bold mb-1.5 ${isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {isPositive ? <ArrowUpRight size={16} className="mr-1"/> : <ArrowDownRight size={16} className="mr-1"/>}
+                    {Math.abs(Number(percentChange))}%
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-slate-200/60 relative overflow-hidden hover:shadow-md transition-shadow">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full -mr-10 -mt-10 blur-2xl"></div>
+                <p className="text-slate-500 font-semibold mb-2">{t("lowestPriceYear")}</p>
+                <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+                  ₹{Math.min(...marketData.map(d => d.price))}
+                </h3>
+              </div>
+              
+              <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-slate-200/60 relative overflow-hidden hover:shadow-md transition-shadow">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-400/20 to-transparent rounded-full -mr-10 -mt-10 blur-2xl"></div>
+                <p className="text-slate-500 font-semibold mb-2">{t("highestPriceYear")}</p>
+                <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+                  ₹{Math.max(...marketData.map(d => d.price))}
+                </h3>
               </div>
             </div>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-slate-200/60 relative overflow-hidden hover:shadow-md transition-shadow">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full -mr-10 -mt-10 blur-2xl"></div>
-            <p className="text-slate-500 font-semibold mb-2">{t("lowestPriceYear")}</p>
-            <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-              ₹{Math.min(...data.map(d => d.price))}
-            </h3>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-slate-200/60 relative overflow-hidden hover:shadow-md transition-shadow">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-400/20 to-transparent rounded-full -mr-10 -mt-10 blur-2xl"></div>
-            <p className="text-slate-500 font-semibold mb-2">{t("highestPriceYear")}</p>
-            <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-              ₹{Math.max(...data.map(d => d.price))}
-            </h3>
-          </div>
-        </div>
 
-        {/* Interactive Chart Section */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 shadow-lg shadow-slate-200/50 border border-slate-200">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-2xl font-bold text-slate-800">{t("priceTrend12Months")}</h3>
-          </div>
-          
-          <div className="w-full h-[450px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data} margin={{ top: 10, right: 10, bottom: 20, left: -20 }}>
-                <defs>
-                  <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#16a34a" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#16a34a" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="month" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#94a3b8', fontWeight: 600, fontSize: 13 }}
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#94a3b8', fontWeight: 600, fontSize: 13 }}
-                  dx={-10}
-                  tickFormatter={(value) => `₹${value}`}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: 'none', 
-                    boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-                    padding: '16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(8px)'
-                  }}
-                  formatter={(value: number) => [`₹${value}`, t("price")]}
-                  labelStyle={{ color: '#64748b', fontWeight: 700, marginBottom: '8px', fontSize: '16px' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="price" 
-                  name={t("marketPrice")}
-                  stroke="#16a34a" 
-                  strokeWidth={4}
-                  fillOpacity={1}
-                  fill="url(#colorPrice)"
-                  activeDot={{ r: 8, stroke: '#fff', strokeWidth: 4, fill: '#16a34a', style: { filter: 'drop-shadow(0px 4px 6px rgba(22, 163, 74, 0.4))' } }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
+            {/* Interactive Chart Section */}
+            <div className="bg-white/90 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 shadow-lg shadow-slate-200/50 border border-slate-200">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-2xl font-bold text-slate-800">{t("priceTrend12Months")}</h3>
+              </div>
+              
+              <div className="w-full h-[450px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={marketData} margin={{ top: 10, right: 10, bottom: 20, left: -20 }}>
+                    <defs>
+                      <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#16a34a" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#16a34a" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94a3b8', fontWeight: 600, fontSize: 13 }}
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94a3b8', fontWeight: 600, fontSize: 13 }}
+                      dx={-10}
+                      tickFormatter={(value) => `₹${value}`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        borderRadius: '16px', 
+                        border: 'none', 
+                        boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+                        padding: '16px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      formatter={(value: number) => [`₹${value}`, t("price")]}
+                      labelStyle={{ color: '#64748b', fontWeight: 700, marginBottom: '8px', fontSize: '16px' }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="price" 
+                      name={t("marketPrice")}
+                      stroke="#16a34a" 
+                      strokeWidth={4}
+                      fillOpacity={1}
+                      fill="url(#colorPrice)"
+                      activeDot={{ r: 8, stroke: '#fff', strokeWidth: 4, fill: '#16a34a', style: { filter: 'drop-shadow(0px 4px 6px rgba(22, 163, 74, 0.4))' } }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

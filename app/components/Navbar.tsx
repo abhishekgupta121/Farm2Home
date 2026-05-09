@@ -34,6 +34,11 @@ const Navbar = () => {
     setUserRole(role);
     if (role) {
       localStorage.setItem("userRole", role);
+      // For Demo: Create a mock user if one doesn't exist
+      const mockUser = role === 'farmer' 
+        ? { _id: "65f1a2b3c4d5e6f7a8b9c0d1", name: "Raju Farmer (Demo)", role: "farmer", pinCode: "462001", farmName: "Green Valley Farms", mobileNumber: "9876543210" }
+        : { _id: "65f1a2b3c4d5e6f7a8b9c0d2", name: "Suresh Consumer (Demo)", role: "consumer", pinCode: "462001", mobileNumber: "9123456780" };
+      localStorage.setItem("user", JSON.stringify(mockUser));
     } else {
       localStorage.removeItem("userRole");
       localStorage.removeItem("user");
@@ -50,9 +55,11 @@ const Navbar = () => {
   // Dynamic links based on role
   const roleLinks = {
     farmer: [
-      { name: 'Ugly Sell', href: '/ugly-sell' },
-      { name: 'Pre-list', href: '/pre-list' },
+      { name: 'Upload Crops', href: '/farmer' },
+      { name: 'Ugly Sell', href: '/farmer/ugly-sell' },
+      { name: 'Pre-list', href: '/farmer/pre-list' },
       { name: 'Dashboard', href: '/farmer/dashboard' },
+      { name: 'Profile', href: '/farmer/profile' },
     ],
     consumer: [
       { name: 'Ugly Buy', href: '/ugly-buy' },
