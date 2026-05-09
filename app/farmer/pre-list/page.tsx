@@ -304,5 +304,4 @@ export default function PreListPage() {
       </div>
     </div>
   );
-});
 }
