@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+// Ensure User model is registered whenever Crop is imported (needed for populate)
+import "./User";
+
 export interface ICrop extends mongoose.Document {
   farmerId: mongoose.Types.ObjectId;
   farmerName: string;
@@ -13,8 +16,11 @@ export interface ICrop extends mongoose.Document {
   availableQuantityKg: number;
   description: string;
   harvestDate: Date;
-  status: "active" | "sold" | "pre-booked";
+  status: "pending" | "active" | "sold" | "pre-booked" | "rejected";
   imageUrl?: string;
+  isOrganic: boolean;
+  isVerifiedFarmer: boolean;
+  location: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,11 +60,15 @@ const CropSchema = new mongoose.Schema<ICrop>(
     status: {
       type: String,
       required: true,
-      enum: ["active", "sold", "pre-booked"],
-      default: "active",
+      enum: ["pending", "active", "sold", "pre-booked", "rejected"],
+      default: "pending",
     },
+    isOrganic: { type: Boolean, default: false },
+    isVerifiedFarmer: { type: Boolean, default: false },
+    location: { type: String, default: "" },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Crop || mongoose.model<ICrop>("Crop", CropSchema);
+export default (mongoose.models.Crop as mongoose.Model<ICrop>) || mongoose.model<ICrop>("Crop", CropSchema);
+

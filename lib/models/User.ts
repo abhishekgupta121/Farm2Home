@@ -2,12 +2,17 @@ import mongoose from "mongoose";
 
 export interface IUser extends mongoose.Document {
   name: string;
-  address: string;
+  address: {
+    state: string;
+    city: string;
+    addressLine1: string;
+    addressLine2?: string;
+  } | string; // keeping | string for backward compatibility with existing data
   pinCode: string;
   mobileNumber: string;
   aadhaarNumber: string;
   password: string;
-  role: "farmer" | "consumer";
+  role: "farmer" | "consumer" | "admin";
   farmName?: string; // Optional, only for farmers
   createdAt: Date;
   updatedAt: Date;
@@ -20,7 +25,7 @@ const UserSchema = new mongoose.Schema<IUser>(
       required: [true, "Please provide a name"],
     },
     address: {
-      type: String,
+      type: mongoose.Schema.Types.Mixed,
       required: [true, "Please provide an address"],
     },
     pinCode: {
@@ -46,7 +51,7 @@ const UserSchema = new mongoose.Schema<IUser>(
     role: {
       type: String,
       required: true,
-      enum: ["farmer", "consumer"],
+      enum: ["farmer", "consumer", "admin"],
     },
     farmName: {
       type: String,

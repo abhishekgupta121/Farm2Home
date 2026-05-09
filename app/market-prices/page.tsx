@@ -212,7 +212,7 @@ export default function MarketPricesPage() {
                         backgroundColor: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(8px)'
                       }}
-                      formatter={(value: number) => [`₹${value}`, t("price")]}
+                      formatter={(value: any) => [`₹${value}`, t("price")]}
                       labelStyle={{ color: '#64748b', fontWeight: 700, marginBottom: '8px', fontSize: '16px' }}
                     />
                     <Area 

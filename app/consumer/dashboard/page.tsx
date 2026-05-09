@@ -1,16 +1,193 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { LogOut, ShoppingCart, MapPin, Search, Filter, ShoppingBag, Leaf, Tractor, Tag } from "lucide-react";
+import { useEffect, useState, Suspense, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { LogOut, ShoppingCart, MapPin, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import axios from "axios";
+import { useCart } from "@/lib/CartContext";
+import FilterSidebar from "@/app/components/FilterSidebar";
+import FilterDrawer from "@/app/components/FilterDrawer";
+import FilterChips from "@/app/components/FilterChips";
+import ProductSkeleton from "@/app/components/ProductSkeleton";
 
-export default function ConsumerDashboard() {
+const formatAddress = (addr: any, fallback: string) => {
+  if (!addr) return fallback;
+  if (typeof addr === 'string') return addr;
+  const parts = [addr.addressLine1, addr.addressLine2, addr.city, addr.state].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : fallback;
+};
+
+function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, qty: number) => void }) {
+  const minQty = Math.min(["vegetable", "fruit"].includes(crop.category) ? 5 : 20, crop.availableQuantityKg);
+  const [quantity, setQuantity] = useState<number | string>(minQty);
+  const [added, setAdded] = useState(false);
+
+  const handleAdd = () => {
+    const finalQty = typeof quantity === 'number' ? quantity : minQty;
+    if (finalQty < minQty) return;
+    addToCart(crop._id, finalQty);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === '') {
+      setQuantity('');
+      return;
+    }
+    const num = parseInt(val);
+    if (!isNaN(num)) {
+      setQuantity(Math.min(num, crop.availableQuantityKg));
+    }
+  };
+
+  const handleQtyBlur = () => {
+    if (quantity === '' || (typeof quantity === 'number' && quantity < minQty)) {
+      setQuantity(minQty);
+    }
+  };
+
+  return (
+    <div className="group bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 overflow-hidden flex flex-col">
+      <div className="h-56 bg-slate-100 relative overflow-hidden shrink-0">
+        {crop.imageUrl ? (
+          <img 
+            src={crop.imageUrl} 
+            alt={crop.cropName} 
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+          />
+        ) : (
+          <>
+            <div className={`absolute inset-0 opacity-20 bg-gradient-to-br ${
+              crop.category === 'vegetable' ? 'from-green-500 to-emerald-700' :
+              crop.category === 'fruit' ? 'from-red-500 to-orange-600' :
+              'from-yellow-500 to-amber-700'
+            }`}></div>
+            <div className="absolute inset-0 flex items-center justify-center text-slate-300 group-hover:scale-110 transition-transform duration-700">
+              {crop.category === 'vegetable' ? <Leaf size={64} /> : 
+               crop.listingType === 'ugly-sell' ? <Tag size={64} /> : <Tractor size={64} />}
+            </div>
+          </>
+        )}
+        
+        <div className="absolute top-4 left-4 flex flex-col gap-2">
+          <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg ${
+            crop.listingType === 'ugly-sell' ? 'bg-orange-500 text-white' :
+            crop.listingType === 'pre-list' ? 'bg-blue-500 text-white' :
+            'bg-green-600 text-white'
+          }`}>
+            {crop.listingType}
+          </span>
+          {crop.isOrganic && (
+            <span className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg bg-green-100 text-green-700 border border-green-200">
+              Organic
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="p-6 flex flex-col flex-1">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h4 className="text-xl font-black text-slate-900 tracking-tight">{crop.cropName}</h4>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{crop.category}</p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-black text-slate-900 leading-none">₹{crop.pricePerKg}</div>
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">per kg</div>
+          </div>
+        </div>
+
+        <div className="bg-slate-50 rounded-2xl p-4 my-6 space-y-3 flex-1 border border-slate-100">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-slate-500 font-bold">Farmer</span>
+            <span className="text-slate-900 font-black flex items-center gap-1">
+              {crop.farmerName}
+              {crop.isVerifiedFarmer && (
+                <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+              )}
+            </span>
+          </div>
+          <div className="flex flex-col text-sm">
+            <span className="text-slate-500 font-bold mb-1">Full Address</span>
+            <span className="text-slate-900 font-bold capitalize leading-tight">{formatAddress(crop.farmerId?.address, crop.location || crop.pinCode)}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200">
+            <span className="text-slate-500 font-bold">Availability</span>
+            {crop.availableQuantityKg > 0 ? (
+              <span className="text-green-600 font-black">{crop.availableQuantityKg} kg</span>
+            ) : (
+              <span className="text-red-500 font-black">Out of Stock</span>
+            )}
+          </div>
+        </div>
+
+        {crop.availableQuantityKg > 0 ? (
+          <div className="flex gap-3 mt-auto">
+            <div className="relative flex flex-col justify-center shrink-0 w-24">
+              <div className="relative flex items-center w-full mb-1">
+                <input 
+                  type="number" 
+                  min={minQty} 
+                  max={crop.availableQuantityKg}
+                  value={quantity}
+                  onChange={handleQtyChange}
+                  onBlur={handleQtyBlur}
+                  className="w-full h-full py-4 pl-4 pr-8 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all placeholder:text-slate-400"
+                  placeholder="Qty"
+                />
+                <span className="absolute right-3 text-[10px] font-black text-slate-400 uppercase pointer-events-none">kg</span>
+              </div>
+              <div className="text-[10px] font-bold text-orange-500 text-center leading-tight">
+                Min: {minQty} kg<br/>Max: {crop.availableQuantityKg} kg
+              </div>
+            </div>
+            <button 
+              onClick={handleAdd}
+              disabled={quantity === '' || quantity < minQty}
+              className={`flex-1 py-4 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg active:scale-95 group-hover:shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed ${added ? 'bg-green-600 hover:bg-green-700 shadow-green-500/20' : 'bg-slate-900 hover:bg-orange-600'}`}
+            >
+              {added ? "Added ✓" : "Add to Cart"}
+            </button>
+          </div>
+        ) : (
+          <button disabled className="w-full mt-auto py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-sm uppercase tracking-widest cursor-not-allowed">
+            Out of Stock
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { addToCart, totalItems } = useCart();
+
   const [user, setUser] = useState<any>(null);
   const [crops, setCrops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [totalProducts, setTotalProducts] = useState(0);
+  
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Parse filters from URL
+  const currentFilters = {
+    category: searchParams.get("category") ? searchParams.get("category")?.split(",") : [],
+    minPrice: searchParams.get("minPrice") || "",
+    maxPrice: searchParams.get("maxPrice") || "",
+    organic: searchParams.get("organic") === "true",
+    verified: searchParams.get("verified") === "true",
+    inStock: searchParams.get("inStock") === "true",
+    location: searchParams.get("location") || "",
+    search: searchParams.get("search") || "",
+    sort: searchParams.get("sort") || "newest",
+    page: parseInt(searchParams.get("page") || "1"),
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -19,17 +196,26 @@ export default function ConsumerDashboard() {
     } else {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      fetchNearbyCrops(parsedUser.pinCode);
+      // Fetch crops based on url params OR default to user pinCode if no location/pinCode specified
+      fetchCrops(parsedUser.pinCode);
     }
-  }, [router]);
+  }, [searchParams]); // Re-fetch when URL changes
 
-  const fetchNearbyCrops = async (pinCode: string) => {
+  const fetchCrops = async (defaultPin: string) => {
+    setLoading(true);
     try {
-      const res = await fetch(`/api/crops?pinCode=${pinCode}`);
-      const data = await res.json();
-      if (res.ok) {
-        setCrops(data.crops);
+      // Build API query string based on URL filters
+      const params = new URLSearchParams(searchParams.toString());
+      if (!params.has("pinCode") && !params.has("location")) {
+        // Only filter by pinCode if it's a valid 6-digit value
+        if (defaultPin && defaultPin !== "undefined" && /^\d{6}$/.test(defaultPin)) {
+          params.set("pinCode", defaultPin);
+        }
       }
+      
+      const res = await axios.get(`/api/crops?${params.toString()}`);
+      setCrops(res.data.crops);
+      setTotalProducts(res.data.pagination?.total || 0);
     } catch (err) {
       console.error("Failed to fetch crops:", err);
     } finally {
@@ -43,51 +229,128 @@ export default function ConsumerDashboard() {
     router.push("/");
   };
 
-  const filteredCrops = crops.filter(crop => 
-    crop.cropName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    crop.farmerName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Update URL based on filter changes
+  const applyFilters = useCallback((newFilters: any) => {
+    const params = new URLSearchParams();
+    
+    if (newFilters.category?.length > 0) params.set("category", newFilters.category.join(","));
+    if (newFilters.minPrice) params.set("minPrice", newFilters.minPrice);
+    if (newFilters.maxPrice) params.set("maxPrice", newFilters.maxPrice);
+    if (newFilters.organic) params.set("organic", "true");
+    if (newFilters.verified) params.set("verified", "true");
+    if (newFilters.inStock) params.set("inStock", "true");
+    if (newFilters.location) params.set("location", newFilters.location);
+    if (newFilters.search) params.set("search", newFilters.search);
+    if (newFilters.sort && newFilters.sort !== "newest") params.set("sort", newFilters.sort);
+    
+    // Always reset to page 1 when filters change
+    params.set("page", "1");
 
-  if (!user || loading) return <div className="p-8 text-center flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full"></div></div>;
+    router.push(`/consumer/dashboard?${params.toString()}`, { scroll: false });
+  }, [router]);
+
+  // Handler from chips or clear all
+  const removeFilter = (key: string, value?: string) => {
+    const newFilters = { ...currentFilters };
+    if (key === "category" && value) {
+      newFilters.category = (newFilters.category || []).filter((c: string) => c !== value);
+    } else {
+      (newFilters as any)[key] = typeof (newFilters as any)[key] === "boolean" ? false : "";
+    }
+    applyFilters(newFilters);
+  };
+
+  const clearAllFilters = () => {
+    router.push(`/consumer/dashboard`, { scroll: false });
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newFilters = { ...currentFilters, search: e.target.value };
+    applyFilters(newFilters);
+  };
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newFilters = { ...currentFilters, sort: e.target.value };
+    applyFilters(newFilters);
+  };
+
+  if (!user) return null; // Prevent flash
 
   return (
-    <div className="min-h-screen bg-slate-50 selection:bg-orange-100 selection:text-orange-900">
+    <div className="min-h-screen bg-slate-50 selection:bg-orange-100 selection:text-orange-900 pb-20">
       {/* Top Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 px-4 sm:px-8 py-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-orange-100 p-3 rounded-2xl text-orange-600 shadow-sm">
-              <ShoppingCart size={28} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Marketplace</h1>
-              <div className="flex items-center gap-1.5 text-slate-500 text-xs font-bold uppercase tracking-widest">
-                <MapPin size={12} className="text-orange-500" />
-                {user.pinCode} • Nearby You
+        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-4 w-full md:w-auto justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-orange-100 p-3 rounded-2xl text-orange-600 shadow-sm hidden sm:block">
+                <ShoppingCart size={28} />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Marketplace</h1>
+                <div className="flex items-center gap-1.5 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                  <MapPin size={12} className="text-orange-500" />
+                  {user.pinCode} • Nearby You
+                </div>
               </div>
             </div>
+            {/* Mobile Filter Toggle */}
+            <button 
+              className="md:hidden p-2 text-slate-600 bg-slate-100 rounded-lg"
+              onClick={() => setMobileFiltersOpen(true)}
+            >
+              <Filter size={20} />
+            </button>
           </div>
 
           {/* Search Bar */}
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-            <input 
-              type="text" 
-              placeholder="Search crops, farmers..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-12 pr-4 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-400 transition-all font-medium"
-            />
+          <div className="relative w-full max-w-2xl mx-auto md:mx-0 group">
+            {/* Animated glow ring */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-400 to-amber-400 rounded-2xl opacity-0 group-focus-within:opacity-100 blur transition-all duration-300" />
+            <div className="relative flex items-center bg-white rounded-2xl shadow-sm border border-slate-200 group-focus-within:border-transparent transition-all duration-300 overflow-hidden">
+              {/* Search icon */}
+              <div className="flex items-center justify-center pl-4 pr-2 shrink-0">
+                <Search 
+                  size={20} 
+                  className="text-slate-400 group-focus-within:text-orange-500 transition-colors duration-200" 
+                />
+              </div>
+              {/* Input */}
+              <input 
+                type="text"
+                id="marketplace-search"
+                placeholder="Search crops, farmers, categories..."
+                value={currentFilters.search}
+                onChange={handleSearchChange}
+                className="flex-1 bg-transparent py-3.5 pr-3 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none text-sm"
+              />
+              {/* Clear button — only shows when there's text */}
+              {currentFilters.search && (
+                <button
+                  onClick={() => applyFilters({ ...currentFilters, search: "" })}
+                  className="flex items-center justify-center w-7 h-7 mr-2 rounded-full bg-slate-100 hover:bg-red-100 hover:text-red-500 text-slate-400 transition-all shrink-0"
+                  aria-label="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
+              {/* Search submit button */}
+              <button className="m-1.5 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-200 shadow-md shadow-orange-500/20 active:scale-95 shrink-0">
+                Search
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="relative p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-orange-50 hover:text-orange-600 transition-colors">
+          <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+            <Link href="/cart" className="relative p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-orange-50 hover:text-orange-600 transition-colors">
               <ShoppingBag size={22} />
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-orange-500 rounded-full border-2 border-white"></span>
-            </button>
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">{totalItems}</span>
+              )}
+            </Link>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-2xl transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 sm:px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-2xl transition-all active:scale-95"
             >
               <LogOut size={18} />
               <span className="hidden sm:inline">Logout</span>
@@ -96,118 +359,126 @@ export default function ConsumerDashboard() {
         </div>
       </header>
 
-      <main className="p-4 sm:p-8 max-w-7xl mx-auto">
-        {/* Welcome Section */}
-        <div className="mb-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-[2.5rem] p-8 sm:p-12 text-white relative overflow-hidden shadow-xl shadow-orange-500/20">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-          <div className="relative z-10">
-            <h2 className="text-4xl font-black mb-4 tracking-tight">Fresh from farms to your table, {user.name.split(' ')[0]}!</h2>
-            <p className="text-orange-50 font-medium text-lg max-w-xl opacity-90">
-              Supporting local farmers in <span className="font-bold underline decoration-white/30 underline-offset-4">{user.pinCode}</span>. Quality produce at fair prices.
-            </p>
-          </div>
-          <div className="absolute bottom-8 right-12 hidden lg:block animate-float">
-            <div className="bg-white/20 backdrop-blur-md p-4 rounded-3xl border border-white/30 flex items-center gap-4">
-              <div className="bg-white text-orange-600 p-3 rounded-2xl shadow-lg">
-                <Leaf size={24} />
+      <main className="p-4 sm:p-8 max-w-[1400px] mx-auto">
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          {/* Desktop Sidebar Filter */}
+          <aside className="hidden lg:block w-72 shrink-0">
+            <div className="sticky top-28">
+              <FilterSidebar 
+                initialFilters={currentFilters} 
+                onFilterChange={applyFilters} 
+              />
+            </div>
+          </aside>
+
+          {/* Mobile Drawer Filter */}
+          <FilterDrawer 
+            isOpen={mobileFiltersOpen} 
+            onClose={() => setMobileFiltersOpen(false)} 
+            initialFilters={currentFilters}
+            onFilterChange={(f) => {
+              applyFilters(f);
+              // Do not automatically close to allow multiple selections, user can close manually
+            }}
+          />
+
+          {/* Main Product Area */}
+          <div className="flex-1 min-w-0">
+            
+            {/* Top Bar (Chips & Sort) */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Products</h2>
+                <p className="text-slate-500 font-bold text-sm uppercase tracking-widest mt-1">Showing {totalProducts} results</p>
               </div>
-              <div className="pr-4">
-                <div className="text-xs font-black uppercase tracking-widest opacity-70">Nearby Farmers</div>
-                <div className="text-2xl font-black">{crops.length} Active</div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <span className="text-sm font-bold text-slate-500 whitespace-nowrap">Sort by:</span>
+                <select 
+                  value={currentFilters.sort}
+                  onChange={handleSortChange}
+                  className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-orange-500 cursor-pointer w-full sm:w-auto"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="price_asc">Price: Low to High</option>
+                  <option value="price_desc">Price: High to Low</option>
+                  <option value="popular">Most Popular</option>
+                </select>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Crops Grid */}
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Nearby Listings</h3>
-            <p className="text-slate-500 font-bold text-sm uppercase tracking-widest mt-1">Available in {user.pinCode}</p>
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
-            <Filter size={18} />
-            Filter
-          </button>
-        </div>
+            {/* Active Filter Chips */}
+            <FilterChips 
+              filters={currentFilters} 
+              onRemove={removeFilter} 
+              onClearAll={clearAllFilters} 
+            />
 
-        {filteredCrops.length === 0 ? (
-          <div className="text-center py-24 bg-white rounded-[2.5rem] border border-dashed border-slate-200 shadow-sm">
-            <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Search size={40} className="text-slate-300" />
-            </div>
-            <h4 className="text-xl font-bold text-slate-800 mb-2">No crops found nearby</h4>
-            <p className="text-slate-500 font-medium">Check back later or try a different search term.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredCrops.map((crop) => (
-              <div key={crop._id} className="group bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
-                {/* Visual Representation of Crop */}
-                <div className="h-48 bg-slate-100 relative overflow-hidden">
-                  {crop.imageUrl ? (
-                    <img 
-                      src={crop.imageUrl} 
-                      alt={crop.cropName} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                    />
-                  ) : (
-                    <>
-                      <div className={`absolute inset-0 opacity-20 bg-gradient-to-br ${
-                        crop.category === 'vegetable' ? 'from-green-500 to-emerald-700' :
-                        crop.category === 'fruit' ? 'from-red-500 to-orange-600' :
-                        'from-yellow-500 to-amber-700'
-                      }`}></div>
-                      <div className="absolute inset-0 flex items-center justify-center text-slate-300 group-hover:scale-110 transition-transform duration-700">
-                        {crop.category === 'vegetable' ? <Leaf size={64} /> : 
-                         crop.listingType === 'ugly-sell' ? <Tag size={64} /> : <Tractor size={64} />}
-                      </div>
-                    </>
-                  )}
-                  
-                  <div className="absolute top-4 left-4">
-                    <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg ${
-                      crop.listingType === 'ugly-sell' ? 'bg-orange-500 text-white' :
-                      crop.listingType === 'pre-list' ? 'bg-blue-500 text-white' :
-                      'bg-green-600 text-white'
-                    }`}>
-                      {crop.listingType}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="text-xl font-black text-slate-900 tracking-tight">{crop.cropName}</h4>
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{crop.category}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-black text-slate-900 leading-none">₹{crop.pricePerKg}</div>
-                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">per kg</div>
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-2xl p-4 my-6 space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-bold">Farmer</span>
-                      <span className="text-slate-900 font-black">{crop.farmerName}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-bold">Quantity</span>
-                      <span className="text-slate-900 font-black">{crop.availableQuantityKg} kg</span>
-                    </div>
-                  </div>
-
-                  <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-orange-600 transition-all shadow-lg active:scale-95 group-hover:shadow-orange-500/20">
-                    Add to Cart
-                  </button>
-                </div>
+            {/* Products Grid */}
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map(i => <ProductSkeleton key={i} />)}
               </div>
-            ))}
+            ) : crops.length === 0 ? (
+              <div className="text-center py-24 bg-white rounded-[2.5rem] border border-dashed border-slate-200 shadow-sm mt-8">
+                <div className="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Search size={48} className="text-slate-300" />
+                </div>
+                <h4 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">No products found</h4>
+                <p className="text-slate-500 font-medium max-w-md mx-auto">Try adjusting your filters, searching for something else, or clearing all filters.</p>
+                <button 
+                  onClick={clearAllFilters}
+                  className="mt-8 px-8 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {crops.map((crop) => (
+                    <ProductCard key={crop._id} crop={crop} addToCart={addToCart} />
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalProducts > 12 && (
+                  <div className="mt-12 flex items-center justify-center gap-4">
+                    <button 
+                      onClick={() => applyFilters({ ...currentFilters, page: currentFilters.page - 1 })}
+                      disabled={currentFilters.page <= 1}
+                      className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 disabled:opacity-50 transition-colors shadow-sm"
+                    >
+                      Previous
+                    </button>
+                    <span className="font-bold text-slate-500">Page {currentFilters.page}</span>
+                    <button 
+                      onClick={() => applyFilters({ ...currentFilters, page: currentFilters.page + 1 })}
+                      disabled={currentFilters.page * 12 >= totalProducts}
+                      className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 disabled:opacity-50 transition-colors shadow-sm"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        )}
+        </div>
       </main>
     </div>
+  );
+}
+
+export default function ConsumerDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="p-8 text-center flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="animate-spin w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full"></div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }

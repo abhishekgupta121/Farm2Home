@@ -15,7 +15,12 @@ export default function FarmerSignupPage() {
   const [formData, setFormData] = useState({
     name: "",
     farmName: "",
-    address: "",
+    address: {
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+    },
     pinCode: "",
     mobileNumber: "",
     aadhaarNumber: "",
@@ -28,7 +33,9 @@ export default function FarmerSignupPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.address.trim()) newErrors.address = "Address is required";
+    if (!formData.address.addressLine1.trim()) newErrors.addressLine1 = "Address Line 1 is required";
+    if (!formData.address.city.trim()) newErrors.city = "City is required";
+    if (!formData.address.state.trim()) newErrors.state = "State is required";
     
     if (!/^\d{6}$/.test(formData.pinCode)) {
       newErrors.pinCode = "PIN code must be exactly 6 digits";
@@ -104,6 +111,16 @@ export default function FarmerSignupPage() {
     }
   };
 
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ 
+      ...formData, 
+      address: { ...formData.address, [e.target.name]: e.target.value } 
+    });
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: "" });
+    }
+  };
+
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-8 bg-slate-50 overflow-hidden">
       {/* Background */}
@@ -170,16 +187,54 @@ export default function FarmerSignupPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-bold text-slate-700 mb-1 ml-1">Full Address *</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-1 ml-1">Address Line 1 *</label>
                   <input
                     type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className={`w-full bg-white text-slate-800 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${errors.address ? 'border-red-500' : 'border-slate-200'}`}
-                    placeholder="Street, Village, District"
+                    name="addressLine1"
+                    value={formData.address.addressLine1}
+                    onChange={handleAddressChange}
+                    className={`w-full bg-white text-slate-800 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${errors.addressLine1 ? 'border-red-500' : 'border-slate-200'}`}
+                    placeholder="House No, Building, Street Area"
                   />
-                  {errors.address && <p className="text-red-500 text-xs mt-1 ml-1">{errors.address}</p>}
+                  {errors.addressLine1 && <p className="text-red-500 text-xs mt-1 ml-1">{errors.addressLine1}</p>}
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-1 ml-1">Address Line 2 (Optional)</label>
+                  <input
+                    type="text"
+                    name="addressLine2"
+                    value={formData.address.addressLine2}
+                    onChange={handleAddressChange}
+                    className={`w-full bg-white text-slate-800 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all`}
+                    placeholder="Landmark, Sector, Locality"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1 ml-1">City *</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.address.city}
+                    onChange={handleAddressChange}
+                    className={`w-full bg-white text-slate-800 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${errors.city ? 'border-red-500' : 'border-slate-200'}`}
+                    placeholder="City / Village"
+                  />
+                  {errors.city && <p className="text-red-500 text-xs mt-1 ml-1">{errors.city}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1 ml-1">State *</label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={formData.address.state}
+                    onChange={handleAddressChange}
+                    className={`w-full bg-white text-slate-800 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all ${errors.state ? 'border-red-500' : 'border-slate-200'}`}
+                    placeholder="State"
+                  />
+                  {errors.state && <p className="text-red-500 text-xs mt-1 ml-1">{errors.state}</p>}
                 </div>
 
                 <div>

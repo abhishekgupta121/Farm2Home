@@ -120,7 +120,7 @@ export default function FarmerDashboard() {
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
                   <Package className="text-green-600" size={28} />
-                  Your Active Listings
+                  Your Listings
                 </h2>
                 <Link href="/farmer" className="text-green-600 text-sm font-black uppercase tracking-widest hover:underline">Add New</Link>
               </div>
@@ -137,6 +137,7 @@ export default function FarmerDashboard() {
                       <tr className="border-b border-slate-100 text-slate-400 text-xs font-black uppercase tracking-widest">
                         <th className="pb-4 pl-2">Crop Details</th>
                         <th className="pb-4 text-center">Type</th>
+                        <th className="pb-4 text-center">Status</th>
                         <th className="pb-4 text-center">Price</th>
                         <th className="pb-4 text-right pr-2">Action</th>
                       </tr>
@@ -168,6 +169,15 @@ export default function FarmerDashboard() {
                               'bg-green-50 text-green-700 border-green-100'
                             }`}>
                               {listing.listingType}
+                            </span>
+                          </td>
+                          <td className="py-5 text-center">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                              listing.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                              listing.status === 'rejected' ? 'bg-red-50 text-red-600 border-red-100' :
+                              'bg-green-50 text-green-700 border-green-100'
+                            }`}>
+                              {listing.status}
                             </span>
                           </td>
                           <td className="py-5 text-center font-black text-slate-900">₹{listing.pricePerKg}/kg</td>

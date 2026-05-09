@@ -287,7 +287,7 @@ export default function FarmerHomePage() {
                   onChange={handleChange}
                   className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm"
                   placeholder="e.g. 50"
-                  min="1"
+                  min={["vegetable", "fruit"].includes(formData.category) ? 5 : 20}
                   required
                 />
               </div>

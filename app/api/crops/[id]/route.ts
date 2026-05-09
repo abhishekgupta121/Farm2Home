@@ -5,11 +5,12 @@ import Crop from "@/lib/models/Crop";
 // DELETE /api/crops/[id] → farmer deletes their listing
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
 
     const deleted = await Crop.findByIdAndDelete(id);
     if (!deleted) {

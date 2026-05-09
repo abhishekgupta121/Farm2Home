@@ -17,6 +17,22 @@ export async function POST(req: Request) {
       );
     }
 
+    // Mock Admin Login
+    if (mobileNumber === "0000000000" && password === "password") {
+      return NextResponse.json(
+        { 
+          message: "Admin Login successful", 
+          user: {
+            _id: "admin-mock-id",
+            name: "Super Admin",
+            mobileNumber: "0000000000",
+            role: "admin",
+          } 
+        },
+        { status: 200 }
+      );
+    }
+
     // Find user
     const user = await User.findOne({ mobileNumber });
     if (!user) {

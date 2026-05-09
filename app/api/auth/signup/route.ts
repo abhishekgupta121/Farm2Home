@@ -27,6 +27,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (typeof address === 'object' && (!address.state || !address.city || !address.addressLine1)) {
+       return NextResponse.json(
+        { error: "Please provide complete address (State, City, Address Line 1)" },
+        { status: 400 }
+      );
+    }
+
     // Check if user exists
     const existingUser = await User.findOne({ mobileNumber });
     if (existingUser) {

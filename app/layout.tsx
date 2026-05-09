@@ -1,5 +1,7 @@
 import "./globals.css";
 import { LanguageProvider } from "@/lib/LanguageContext";
+import { CartProvider } from "@/lib/CartContext";
+import { Toaster } from "react-hot-toast";
 
 export const metadata = {
   title: "Farm2Home",
@@ -15,7 +17,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <LanguageProvider>
-          {children}
+          <CartProvider>
+            {children}
+            <Toaster position="bottom-right" />
+          </CartProvider>
         </LanguageProvider>
       </body>
     </html>

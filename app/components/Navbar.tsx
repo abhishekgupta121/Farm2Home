@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Sprout, LogOut, Languages } from 'lucide-react';
+import { Menu, X, Sprout, LogOut, Languages, ShoppingBag } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useCart } from '@/lib/CartContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const { t, language, setLanguage } = useLanguage();
+  const { totalItems } = useCart();
 
   // For Hackathon Demo: Change this to 'farmer', 'consumer', or null
   const [userRole, setUserRole] = useState<'farmer' | 'consumer' | null>(null);
@@ -138,6 +140,16 @@ const Navbar = () => {
                 <span className="text-xs font-bold uppercase px-2 py-1 bg-green-100 rounded text-green-700">
                   {userRole}
                 </span>
+                {userRole === 'consumer' && (
+                  <Link href="/cart" className="relative p-1 text-slate-500 hover:text-green-600 transition" title="Cart">
+                    <ShoppingBag size={20} />
+                    {totalItems > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                        {totalItems}
+                      </span>
+                    )}
+                  </Link>
+                )}
                 <button 
                   onClick={() => handleRoleChange(null)}
                   className="text-slate-500 hover:text-red-600 transition"

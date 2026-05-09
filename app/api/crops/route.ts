@@ -1,28 +1,107 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Crop from "@/lib/models/Crop";
+import User from "@/lib/models/User";
+import mongoose from "mongoose";
 
-// GET /api/crops?pinCode=462001  → returns active crops for that pincode
-// GET /api/crops?farmerId=xxx    → returns all crops for that farmer
+// GET /api/crops?pinCode=462001&category=vegetable&sort=price_asc
 export async function GET(req: Request) {
   try {
     await dbConnect();
     const { searchParams } = new URL(req.url);
-    const pinCode = searchParams.get("pinCode");
-    const farmerId = searchParams.get("farmerId");
+    
+    // Pagination
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "12");
+    const skip = (page - 1) * limit;
 
     let query: any = {};
-    if (pinCode) {
-      query.pinCode = pinCode;
-      // Allow both active and pre-booked crops to be discovered by consumers
-      query.status = { $in: ["active", "pre-booked"] };
-    }
-    if (farmerId) {
-      query.farmerId = farmerId;
+    
+    // 1. Basic params
+    const pinCode = searchParams.get("pinCode");
+    const farmerId = searchParams.get("farmerId");
+    // Only apply pinCode filter if it's a valid 6-digit number
+    if (pinCode && /^\d{6}$/.test(pinCode)) query.pinCode = pinCode;
+    if (farmerId && mongoose.Types.ObjectId.isValid(farmerId)) {
+      query.farmerId = new mongoose.Types.ObjectId(farmerId);
     }
 
-    const crops = await Crop.find(query).sort({ createdAt: -1 });
-    return NextResponse.json({ crops }, { status: 200 });
+    // Status filter rules:
+    // - If fetching by farmerId: show ALL statuses (farmer sees their own pending/active/rejected)
+    // - If fetching with ?status=: use the provided status (admin use)
+    // - Default (consumer marketplace): only show active & pre-booked
+    const statusParam = searchParams.get("status");
+    if (farmerId) {
+      // No status filter — farmers see all their listings regardless of status
+    } else if (statusParam) {
+      query.status = statusParam;
+    } else {
+      query.status = { $in: ["active", "pre-booked"] };
+    }
+
+    // 2. Category Filter
+    const category = searchParams.get("category");
+    if (category) {
+      query.category = { $in: category.split(",") };
+    }
+
+    // 3. Location Filter
+    const location = searchParams.get("location");
+    if (location) {
+      query.location = { $regex: location, $options: "i" };
+    }
+
+    // 4. Price Filter
+    const minPrice = searchParams.get("minPrice");
+    const maxPrice = searchParams.get("maxPrice");
+    if (minPrice || maxPrice) {
+      query.pricePerKg = {};
+      if (minPrice) query.pricePerKg.$gte = Number(minPrice);
+      if (maxPrice) query.pricePerKg.$lte = Number(maxPrice);
+    }
+
+    // 5. Verification & Organic Filters
+    const verified = searchParams.get("verified");
+    if (verified === "true") query.isVerifiedFarmer = true;
+
+    const organic = searchParams.get("organic");
+    if (organic === "true") query.isOrganic = true;
+
+    // 6. Availability Filter
+    const inStock = searchParams.get("inStock");
+    if (inStock === "true") query.availableQuantityKg = { $gt: 0 };
+    else if (inStock === "false") query.availableQuantityKg = 0;
+
+    // 7. Search Filter (by cropName or farmerName)
+    const search = searchParams.get("search");
+    if (search) {
+      query.$or = [
+        { cropName: { $regex: search, $options: "i" } },
+        { farmerName: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    // 8. Sorting
+    const sortParam = searchParams.get("sort");
+    let sortQuery: any = { createdAt: -1 }; // default newest
+    
+    if (sortParam === "price_asc") sortQuery = { pricePerKg: 1 };
+    else if (sortParam === "price_desc") sortQuery = { pricePerKg: -1 };
+    else if (sortParam === "popular") sortQuery = { availableQuantityKg: -1 }; // mockup for popular
+
+    // Execute queries
+    const totalCount = await Crop.countDocuments(query);
+    const crops = await Crop.find(query).sort(sortQuery).skip(skip).limit(limit).populate("farmerId", "address");
+
+    return NextResponse.json({ 
+      crops, 
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Failed to fetch crops" },
@@ -51,6 +130,8 @@ export async function POST(req: Request) {
       description,
       harvestDate,
       imageUrl,
+      isOrganic,
+      location,
     } = body;
 
     const requiredFields = {
@@ -89,7 +170,9 @@ export async function POST(req: Request) {
       description: description || "",
       harvestDate: new Date(harvestDate),
       imageUrl: imageUrl || "",
-      status: listingType === "pre-list" ? "pre-booked" : "active",
+      isOrganic: Boolean(isOrganic),
+      location: location || "",
+      status: "pending", // Default to pending for admin approval
     });
 
     return NextResponse.json(

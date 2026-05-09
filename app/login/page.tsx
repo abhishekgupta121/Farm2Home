@@ -38,6 +38,8 @@ export default function LoginPage() {
       
       if (data.user.role === "farmer") {
         router.push("/farmer/dashboard");
+      } else if (data.user.role === "admin") {
+        router.push("/admin/dashboard");
       } else {
         router.push("/consumer/dashboard");
       }
