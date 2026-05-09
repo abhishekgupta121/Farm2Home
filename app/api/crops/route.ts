@@ -49,6 +49,7 @@ export async function POST(req: Request) {
       availableQuantityKg,
       description,
       harvestDate,
+      imageUrl,
     } = body;
 
     const requiredFields = {
@@ -86,6 +87,7 @@ export async function POST(req: Request) {
       availableQuantityKg: Number(availableQuantityKg),
       description: description || "",
       harvestDate: new Date(harvestDate),
+      imageUrl: imageUrl || "",
       status: listingType === "pre-list" ? "pre-booked" : "active",
     });
 

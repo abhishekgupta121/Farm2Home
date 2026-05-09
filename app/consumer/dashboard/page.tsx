@@ -143,17 +143,28 @@ export default function ConsumerDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredCrops.map((crop) => (
               <div key={crop._id} className="group bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
-                {/* Visual Placeholder for Crop */}
+                {/* Visual Representation of Crop */}
                 <div className="h-48 bg-slate-100 relative overflow-hidden">
-                  <div className={`absolute inset-0 opacity-20 bg-gradient-to-br ${
-                    crop.category === 'vegetable' ? 'from-green-500 to-emerald-700' :
-                    crop.category === 'fruit' ? 'from-red-500 to-orange-600' :
-                    'from-yellow-500 to-amber-700'
-                  }`}></div>
-                  <div className="absolute inset-0 flex items-center justify-center text-slate-300 group-hover:scale-110 transition-transform duration-700">
-                    {crop.category === 'vegetable' ? <Leaf size={64} /> : 
-                     crop.listingType === 'ugly-sell' ? <Tag size={64} /> : <Tractor size={64} />}
-                  </div>
+                  {crop.imageUrl ? (
+                    <img 
+                      src={crop.imageUrl} 
+                      alt={crop.cropName} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                    />
+                  ) : (
+                    <>
+                      <div className={`absolute inset-0 opacity-20 bg-gradient-to-br ${
+                        crop.category === 'vegetable' ? 'from-green-500 to-emerald-700' :
+                        crop.category === 'fruit' ? 'from-red-500 to-orange-600' :
+                        'from-yellow-500 to-amber-700'
+                      }`}></div>
+                      <div className="absolute inset-0 flex items-center justify-center text-slate-300 group-hover:scale-110 transition-transform duration-700">
+                        {crop.category === 'vegetable' ? <Leaf size={64} /> : 
+                         crop.listingType === 'ugly-sell' ? <Tag size={64} /> : <Tractor size={64} />}
+                      </div>
+                    </>
+                  )}
+                  
                   <div className="absolute top-4 left-4">
                     <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg ${
                       crop.listingType === 'ugly-sell' ? 'bg-orange-500 text-white' :

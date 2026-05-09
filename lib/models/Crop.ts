@@ -14,6 +14,7 @@ export interface ICrop extends mongoose.Document {
   description: string;
   harvestDate: Date;
   status: "active" | "sold" | "pre-booked";
+  imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +50,7 @@ const CropSchema = new mongoose.Schema<ICrop>(
     availableQuantityKg: { type: Number, required: true, min: 0 },
     description: { type: String, default: "" },
     harvestDate: { type: Date, required: true },
+    imageUrl: { type: String, default: "" },
     status: {
       type: String,
       required: true,

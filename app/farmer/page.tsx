@@ -20,8 +20,17 @@ export default function FarmerHomePage() {
     availableQuantityKg: "",
     harvestDate: new Date().toISOString().split('T')[0],
     description: "",
-    listingType: "standard"
+    listingType: "standard",
+    imageUrl: ""
   });
+
+  const SAMPLE_IMAGES = [
+    { name: "Tomatoes", url: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=400" },
+    { name: "Potatoes", url: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=400" },
+    { name: "Wheat", url: "https://images.unsplash.com/photo-1501430654243-c934cec2e1c0?auto=format&fit=crop&q=80&w=400" },
+    { name: "Carrots", url: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&q=80&w=400" },
+    { name: "Onions", url: "https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&q=80&w=400" },
+  ];
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -35,6 +44,10 @@ export default function FarmerHomePage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const setSampleImage = (url: string) => {
+    setFormData(prev => ({ ...prev, imageUrl: url }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,6 +137,56 @@ export default function FarmerHomePage() {
                   placeholder="e.g. Organic Tomatoes"
                   required
                 />
+              </div>
+
+              {/* Image URL */}
+              <div className="sm:col-span-2">
+                <label htmlFor="imageUrl" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                  Crop Image URL
+                </label>
+                <input
+                  type="url"
+                  id="imageUrl"
+                  name="imageUrl"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                  className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm placeholder:text-slate-400"
+                  placeholder="https://example.com/crop-image.jpg"
+                />
+                
+                {/* Quick Select Images */}
+                <div className="mt-4">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Quick Select Sample Images</p>
+                  <div className="flex flex-wrap gap-3">
+                    {SAMPLE_IMAGES.map((img) => (
+                      <button
+                        key={img.url}
+                        type="button"
+                        onClick={() => setSampleImage(img.url)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+                          formData.imageUrl === img.url 
+                          ? "bg-green-600 text-white border-green-600 shadow-lg shadow-green-500/20" 
+                          : "bg-white text-slate-600 border-slate-200 hover:border-green-500 hover:text-green-600"
+                        }`}
+                      >
+                        <div className="w-6 h-6 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+                          <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                        </div>
+                        {img.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview */}
+                {formData.imageUrl && (
+                  <div className="mt-4 rounded-2xl overflow-hidden border border-slate-200 h-40 relative group">
+                    <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <p className="text-white text-xs font-bold uppercase tracking-widest">Image Preview</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Category */}

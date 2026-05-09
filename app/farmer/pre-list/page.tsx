@@ -20,8 +20,16 @@ export default function PreListPage() {
     availableQuantityKg: "",
     harvestDate: "",
     description: "Future harvest available for pre-booking.",
-    listingType: "pre-list"
+    listingType: "pre-list",
+    imageUrl: ""
   });
+
+  const SAMPLE_IMAGES = [
+    { name: "Young Wheat", url: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=400" },
+    { name: "Rice Field", url: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80&w=400" },
+    { name: "Green Mangoes", url: "https://images.unsplash.com/photo-1553134802-ff9b1883cc2c?auto=format&fit=crop&q=80&w=400" },
+    { name: "Apple Orchard", url: "https://images.unsplash.com/photo-1568381329104-165be813d330?auto=format&fit=crop&q=80&w=400" },
+  ];
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -35,6 +43,10 @@ export default function PreListPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const setSampleImage = (url: string) => {
+    setFormData(prev => ({ ...prev, imageUrl: url }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,6 +142,53 @@ export default function PreListPage() {
                   placeholder="e.g. Basmati Rice (Upcoming Harvest)"
                   required
                 />
+              </div>
+
+              {/* Image URL */}
+              <div className="sm:col-span-2">
+                <label htmlFor="imageUrl" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                  Crop Image URL
+                </label>
+                <input
+                  type="url"
+                  id="imageUrl"
+                  name="imageUrl"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                  className="block w-full rounded-2xl border-blue-100 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm placeholder:text-slate-400"
+                  placeholder="https://example.com/crop-image.jpg"
+                />
+                
+                {/* Quick Select Images */}
+                <div className="mt-4">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Quick Select Sample Images</p>
+                  <div className="flex flex-wrap gap-3">
+                    {SAMPLE_IMAGES.map((img) => (
+                      <button
+                        key={img.url}
+                        type="button"
+                        onClick={() => setSampleImage(img.url)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+                          formData.imageUrl === img.url 
+                          ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20" 
+                          : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
+                        }`}
+                      >
+                        <div className="w-6 h-6 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+                          <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                        </div>
+                        {img.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview */}
+                {formData.imageUrl && (
+                  <div className="mt-4 rounded-2xl overflow-hidden border border-blue-100 h-40 relative group">
+                    <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
               </div>
 
               <div>
