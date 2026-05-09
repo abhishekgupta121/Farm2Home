@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Tractor, Package, Bell, ShoppingBag, ArrowRight, Trash2, Plus } from "lucide-react";
+import { LogOut, Tractor, Package, Bell, ShoppingBag, ArrowRight, Trash2, Plus, Leaf } from "lucide-react";
 import Link from "next/link";
 import FarmerNavbar from "@/app/components/FarmerNavbar";
 
