@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, ShieldCheck, CheckCircle, XCircle, Clock, Search, Filter, ShoppingBag, Leaf, Tractor, Tag } from "lucide-react";
+import { LogOut, ShieldCheck, CheckCircle, XCircle, Clock, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, X } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
@@ -108,6 +108,25 @@ export default function AdminDashboard() {
         if (user) refreshWallet(user._id);
       } else {
         toast.error(data.error || "Failed to release payment");
+      }
+    } catch (err) {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleRefund = async (orderId: string) => {
+    if (!confirm("Are you sure you want to refund this order to the consumer? This will return funds and cancel the order.")) return;
+    try {
+      const res = await fetch(`/api/orders/${orderId}/refund`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Order refunded and cancelled!");
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, paymentStatus: "refunded", orderStatus: "cancelled" } : o));
+        if (user) refreshWallet(user._id);
+      } else {
+        toast.error(data.error || "Failed to refund order");
       }
     } catch (err) {
       toast.error("Something went wrong");
@@ -359,6 +378,20 @@ export default function AdminDashboard() {
                         >
                           Release ₹{order.totalAmount}
                         </button>
+                        <button 
+                          onClick={() => handleRefund(order._id)}
+                          className="w-full mt-3 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95"
+                        >
+                          Refund & Cancel
+                        </button>
+                      </div>
+                    ) : order.paymentStatus === "refunded" ? (
+                      <div className="bg-red-50 rounded-3xl p-6 border border-red-100 text-center">
+                        <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <X size={24} />
+                        </div>
+                        <h5 className="font-black text-red-800 mb-1">Order Refunded</h5>
+                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Amount Returned</p>
                       </div>
                     ) : (
                       <div className="bg-green-50 rounded-3xl p-6 border border-green-100 text-center">

@@ -27,9 +27,9 @@ export async function GET(req: Request) {
     if (isAdmin) {
       filter = {}; // Admin sees all
     } else if (farmerId && mongoose.Types.ObjectId.isValid(farmerId)) {
-      filter = { "items.farmerId": farmerId };
+      filter = { "items.farmerId": new mongoose.Types.ObjectId(farmerId) };
     } else if (queryConsumerId && mongoose.Types.ObjectId.isValid(queryConsumerId)) {
-      filter = { consumerId: queryConsumerId };
+      filter = { consumerId: new mongoose.Types.ObjectId(queryConsumerId) };
     } else {
       return NextResponse.json({ error: "Valid ID is required" }, { status: 400 });
     }
