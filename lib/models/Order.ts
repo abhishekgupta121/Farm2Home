@@ -37,8 +37,16 @@ const OrderSchema = new mongoose.Schema<IOrder>(
       },
     ],
     totalAmount: { type: Number, required: true },
-    paymentStatus: { type: String, enum: ["paid", "pending"], default: "pending" },
-    orderStatus: { type: String, enum: ["placed", "shipped", "delivered", "cancelled"], default: "placed" },
+    paymentStatus: { 
+      type: String, 
+      enum: ["paid", "pending", "transferred_to_farmer"], 
+      default: "pending" 
+    },
+    orderStatus: { 
+      type: String, 
+      enum: ["placed", "shipped", "delivered", "cancelled", "confirmed"], 
+      default: "placed" 
+    },
   },
   { timestamps: true }
 );

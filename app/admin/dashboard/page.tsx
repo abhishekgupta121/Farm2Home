@@ -119,6 +119,13 @@ export default function AdminDashboard() {
     router.push("/");
   };
 
+  const formatAddress = (addr: any) => {
+    if (!addr) return "N/A";
+    if (typeof addr === 'string') return addr;
+    const parts = [addr.addressLine1, addr.city, addr.state].filter(Boolean);
+    return parts.length > 0 ? parts.join(", ") : "N/A";
+  };
+
   const filteredCrops = pendingCrops.filter(crop => 
     crop.cropName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     crop.farmerName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -151,7 +158,6 @@ export default function AdminDashboard() {
           </div>
           
           <div className="flex items-center gap-6">
-            {/* Admin Wallet */}
             <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl text-white border border-blue-400/30">
               <div className="p-2 bg-white/20 rounded-xl">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
@@ -174,7 +180,6 @@ export default function AdminDashboard() {
       </nav>
 
       <div className="p-4 sm:p-8 max-w-[1400px] mx-auto space-y-8">
-        {/* Navigation Tabs */}
         <div className="flex p-1.5 bg-slate-200 w-fit rounded-[1.5rem] shadow-inner">
           <button 
             onClick={() => setActiveTab("crops")}
@@ -190,7 +195,6 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/* Search Bar */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
           <div className="relative w-full">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -226,7 +230,6 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                 </div>
-
                 <div className="bg-slate-50 rounded-2xl p-4 mb-6 space-y-2 text-sm font-medium">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Price</span>
@@ -237,7 +240,6 @@ export default function AdminDashboard() {
                     <span className="text-slate-900 font-black">{crop.availableQuantityKg} kg</span>
                   </div>
                 </div>
-
                 <div className="mt-auto flex gap-3">
                   <button onClick={() => handleStatusUpdate(crop._id, "active")} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 text-sm">
                     Approve
@@ -250,74 +252,111 @@ export default function AdminDashboard() {
             ))}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {filteredOrders.map((order) => (
-              <div key={order._id} className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-200 hover:border-blue-300 transition-all">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">#{order._id.slice(-8).toUpperCase()}</span>
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                        order.paymentStatus === 'paid' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
-                      }`}>
-                        {order.paymentStatus === 'paid' ? 'FUNDS IN ESCROW' : 'RELEASED TO FARMER'}
+              <div key={order._id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 hover:border-blue-400 transition-all overflow-hidden relative group">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-200 group-hover:bg-blue-500 transition-colors"></div>
+                
+                <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
+                  <div className="flex-1 space-y-6">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span className="px-4 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest">
+                        ORDER #{order._id.slice(-8).toUpperCase()}
                       </span>
-                    </div>
-                    <h3 className="text-xl font-black text-slate-900">Consumer: {order.consumerId?.name || "Unknown"}</h3>
-                    <div className="mt-3 flex flex-wrap gap-4 text-sm font-medium text-slate-500">
-                      <div className="flex items-center gap-1.5">
-                        <ShoppingBag size={14} className="text-blue-500" />
-                        <span>{order.items.length} Items</span>
+                      <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest border ${
+                        order.paymentStatus === 'paid' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-green-50 text-green-600 border-green-200'
+                      }`}>
+                        {order.paymentStatus === 'paid' ? 'HOLDING IN ESCROW' : 'TRANSFERRED TO FARMER'}
+                      </span>
+                      <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
+                        <Clock size={14} />
+                        {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock size={14} className="text-slate-400" />
-                        <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Consumer Details</p>
+                        <h4 className="text-lg font-black text-slate-900 mb-1">{order.consumerId?.name}</h4>
+                        <p className="text-sm font-bold text-slate-600 mb-2">{order.consumerId?.mobileNumber}</p>
+                        <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                          {formatAddress(order.consumerId?.address)} <br/>
+                          <span className="font-black text-slate-400">PIN: {order.consumerId?.pinCode}</span>
+                        </p>
+                      </div>
+
+                      <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100/50">
+                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">Order Summary</p>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-slate-600">Total Items</span>
+                            <span className="text-sm font-black text-slate-900">{order.items.length} Varieties</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-slate-600">Total Weight</span>
+                            <span className="text-sm font-black text-slate-900">{order.items.reduce((acc: number, item: any) => acc + item.quantity, 0)} kg</span>
+                          </div>
+                          <div className="pt-2 border-t border-blue-100 flex justify-between items-center mt-2">
+                            <span className="text-sm font-black text-blue-700">Total Payout</span>
+                            <span className="text-2xl font-black text-blue-900">₹{order.totalAmount}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Itemized Breakdown & Farmer Info</p>
+                      <div className="space-y-3">
+                        {order.items.map((item: any, idx: number) => (
+                          <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border border-slate-100 rounded-2xl gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-black text-xs">
+                                {item.quantity}kg
+                              </div>
+                              <div>
+                                <p className="font-black text-slate-900 text-sm">{item.cropName}</p>
+                                <p className="text-[10px] font-bold text-slate-500">₹{item.pricePerKg}/kg • Total: ₹{item.total}</p>
+                              </div>
+                            </div>
+                            <div className="text-left sm:text-right border-l sm:border-l-0 sm:border-r border-slate-100 pl-4 sm:pl-0 sm:pr-4">
+                              <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Farmer</p>
+                              <p className="text-xs font-black text-slate-900">{item.farmerId?.name || "N/A"}</p>
+                              <p className="text-[10px] font-medium text-slate-500">{formatAddress(item.farmerId?.address)}</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-3 w-full lg:w-auto">
-                    <div className="text-right">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Transaction</p>
-                      <p className="text-3xl font-black text-slate-900 leading-none">₹{order.totalAmount}</p>
-                    </div>
-                    
+                  <div className="w-full lg:w-64 shrink-0 space-y-4">
                     {order.paymentStatus === "paid" ? (
-                      <button 
-                        onClick={() => handleReleasePayment(order._id)}
-                        className="w-full lg:w-auto px-8 py-3 bg-slate-900 text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl active:scale-95"
-                      >
-                        Release Payment
-                      </button>
+                      <div className="bg-amber-50 rounded-3xl p-6 border border-amber-100 text-center">
+                        <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <ShoppingBag size={24} />
+                        </div>
+                        <h5 className="font-black text-slate-900 mb-2">Pending Release</h5>
+                        <p className="text-xs font-medium text-slate-500 mb-6">Funds are held in escrow. Verify order delivery before releasing.</p>
+                        <button 
+                          onClick={() => handleReleasePayment(order._id)}
+                          className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/30 active:scale-95"
+                        >
+                          Release ₹{order.totalAmount}
+                        </button>
+                      </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-green-600 font-black text-sm">
-                        <CheckCircle size={18} />
-                        PAYMENT FINALIZED
+                      <div className="bg-green-50 rounded-3xl p-6 border border-green-100 text-center">
+                        <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <CheckCircle size={24} />
+                        </div>
+                        <h5 className="font-black text-green-800 mb-1">Payment Released</h5>
+                        <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Transaction Complete</p>
                       </div>
                     )}
                   </div>
                 </div>
-                
-                {/* Item Details */}
-                <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {order.items.map((item: any, idx: number) => (
-                    <div key={idx} className="bg-slate-50 rounded-xl p-3 flex justify-between items-center text-xs">
-                      <div>
-                        <p className="font-black text-slate-900">{item.cropName}</p>
-                        <p className="text-slate-500 font-bold">{item.quantity}kg @ ₹{item.pricePerKg}</p>
-                      </div>
-                      <span className="font-black text-blue-600">₹{item.total}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             ))}
-            {filteredOrders.length === 0 && (
-              <div className="text-center py-20 bg-white rounded-[2.5rem] border border-dashed border-slate-300">
-                <ShoppingBag size={48} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-500 font-bold uppercase tracking-widest">No matching orders found</p>
-              </div>
-            )}
           </div>
         )}
       </div>
