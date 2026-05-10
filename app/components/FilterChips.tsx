@@ -15,11 +15,11 @@ export default function FilterChips({ filters, onRemove, onClearAll }: FilterChi
     const cats = Array.isArray(filters.category) ? filters.category : filters.category.split(",");
     cats.forEach((c: string) => chips.push({ key: "category", value: c, label: c }));
   }
-  if (filters.minPrice) chips.push({ key: "minPrice", value: filters.minPrice, label: `Min: ₹${filters.minPrice}` });
-  if (filters.maxPrice) chips.push({ key: "maxPrice", value: filters.maxPrice, label: `Max: ₹${filters.maxPrice}` });
-  if (filters.organic === "true") chips.push({ key: "organic", value: "true", label: "Organic" });
-  if (filters.verified === "true") chips.push({ key: "verified", value: "true", label: "Verified Farmers" });
-  if (filters.inStock === "true") chips.push({ key: "inStock", value: "true", label: "In Stock" });
+  if (filters.listingType && filters.listingType.length > 0) {
+    const types = Array.isArray(filters.listingType) ? filters.listingType : filters.listingType.split(",");
+    const labels: any = { "standard": "Standard", "pre-list": "Pre-listed", "ugly-sell": "Ugly Buy" };
+    types.forEach((t: string) => chips.push({ key: "listingType", value: t, label: labels[t] || t }));
+  }
   if (filters.location) chips.push({ key: "location", value: filters.location, label: `Location: ${filters.location}` });
   if (filters.search) chips.push({ key: "search", value: filters.search, label: `Search: "${filters.search}"` });
 
