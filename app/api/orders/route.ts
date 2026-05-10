@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
     const orders = await Order.find(filter)
       .populate("items.productId", "cropName pricePerKg")
-      .populate("items.farmerId", "name address mobileNumber")
+      .populate("items.farmerId", "name farmName address mobileNumber")
       .populate("consumerId", "name address mobileNumber pinCode")
       .sort({ createdAt: -1 });
 

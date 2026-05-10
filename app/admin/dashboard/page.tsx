@@ -253,6 +253,22 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Delivery Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending Delivery</p>
+                <h3 className="text-2xl font-black text-slate-900">{orders.filter(o => o.orderStatus === 'placed').length} Orders</h3>
+              </div>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Completed / Paid</p>
+                <h3 className="text-2xl font-black text-green-600">{orders.filter(o => o.paymentStatus === 'transferred_to_farmer').length} Orders</h3>
+              </div>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Refunded / Cancelled</p>
+                <h3 className="text-2xl font-black text-red-500">{orders.filter(o => o.orderStatus === 'cancelled').length} Orders</h3>
+              </div>
+            </div>
+
             {filteredOrders.map((order) => (
               <div key={order._id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 hover:border-blue-400 transition-all overflow-hidden relative group">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-200 group-hover:bg-blue-500 transition-colors"></div>

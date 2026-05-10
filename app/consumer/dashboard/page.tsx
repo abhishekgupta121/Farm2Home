@@ -589,17 +589,33 @@ function DashboardContent() {
                           </div>
                         </div>
 
-                        {/* Item List */}
-                        <div className="space-y-2 mb-6">
+                        {/* Item List with Farmer Details */}
+                        <div className="space-y-4 mb-6">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ordered Items & Farmer Info</p>
                           {order.items.map((item: any, idx: number) => (
-                            <div key={idx} className="flex justify-between items-center text-sm">
-                              <span className="font-bold text-slate-700">{item.quantity}kg {item.cropName}</span>
-                              <span className="text-slate-400 font-bold">₹{item.total}</span>
+                            <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-4 flex flex-col sm:flex-row justify-between gap-4">
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center font-black text-xs shrink-0">
+                                  {item.quantity}kg
+                                </div>
+                                <div>
+                                  <p className="font-black text-slate-900 text-sm">{item.cropName}</p>
+                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">₹{item.pricePerKg}/kg • Total: ₹{item.total}</p>
+                                </div>
+                              </div>
+                              <div className="border-t sm:border-t-0 sm:border-l border-slate-100 pt-3 sm:pt-0 sm:pl-4">
+                                <p className="text-[8px] font-black text-orange-500 uppercase tracking-widest">Sold by</p>
+                                <p className="text-xs font-black text-slate-900">{item.farmerId?.farmName || item.farmerId?.name || "Farmer"}</p>
+                                <p className="text-[10px] font-bold text-slate-500">{item.farmerId?.mobileNumber}</p>
+                              </div>
                             </div>
                           ))}
                         </div>
 
-                        <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
+                        <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-slate-200">
+                          <div className="flex-1 w-full sm:w-auto px-4 py-2 bg-slate-100 rounded-xl text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            Payment: {order.paymentStatus === 'paid' ? 'Held in Escrow' : 'Released to Farmer'}
+                          </div>
                           {order.orderStatus === 'placed' && (
                             <button 
                               onClick={async () => {
