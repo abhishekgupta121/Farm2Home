@@ -35,7 +35,8 @@ export default function FarmerDashboard() {
       fetchListings(farmerId),
       fetchOrders(farmerId),
       fetchReviews(farmerId),
-      fetchDeliveries(farmerId)
+      fetchDeliveries(farmerId),
+      refreshWallet(farmerId)
     ]);
     setLoading(false);
   };
@@ -49,6 +50,22 @@ export default function FarmerDashboard() {
       }
     } catch (err) {
       console.error("Failed to fetch orders:", err);
+    }
+  };
+
+  const refreshWallet = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/user/wallet?userId=${userId}`);
+      const data = await res.json();
+      if (res.ok) {
+        setUser((prev: any) => {
+          const updated = { ...prev, walletBalance: data.walletBalance };
+          localStorage.setItem("user", JSON.stringify(updated));
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error("Wallet refresh failed", err);
     }
   };
 
@@ -238,8 +255,8 @@ export default function FarmerDashboard() {
             <span className="text-3xl font-black text-slate-900">{orders.length}</span>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-blue-300 transition-colors cursor-pointer">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Earnings</span>
-            <span className="text-3xl font-black text-slate-900">₹{orders.reduce((acc, o) => acc + o.totalAmount, 0)}</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Wallet Balance</span>
+            <span className="text-3xl font-black text-blue-600">₹{user.walletBalance || 0}</span>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-yellow-300 transition-colors cursor-pointer">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Avg Rating</span>
@@ -591,8 +608,8 @@ export default function FarmerDashboard() {
                   <span className="font-black text-slate-900">{orders.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">Total Earnings</span>
-                  <span className="font-black text-slate-900">₹{orders.reduce((acc, o) => acc + o.totalAmount, 0)}</span>
+                  <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">Wallet Balance</span>
+                  <span className="font-black text-blue-600">₹{user.walletBalance || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">Quantity Sold</span>
