@@ -89,12 +89,12 @@ export async function POST(req: Request) {
     // 3. Create the Order
     const newOrder = await Order.create({
       consumerId: userId,
-      items: items.map((item: any) => ({
+      items: items.filter((item: any) => item.productId).map((item: any) => ({
         productId: item.productId._id,
-        cropName: item.productId.cropName,
+        cropName: item.productId.cropName || "Unknown Crop",
         quantity: item.quantity,
-        pricePerKg: item.productId.pricePerKg,
-        total: item.productId.pricePerKg * item.quantity,
+        pricePerKg: item.productId.pricePerKg || 0,
+        total: (item.productId.pricePerKg || 0) * item.quantity,
         farmerId: item.productId.farmerId,
       })),
       totalAmount,
@@ -111,9 +111,11 @@ export async function POST(req: Request) {
 
     // 5. Update Crop Quantities (Deduct stock)
     for (const item of items) {
+      if (item.productId && item.productId._id) {
         await Crop.findByIdAndUpdate(item.productId._id, {
             $inc: { availableQuantityKg: -item.quantity }
         });
+      }
     }
 
     // 6. Clear User's Cart
