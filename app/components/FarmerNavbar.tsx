@@ -28,6 +28,7 @@ const farmerLinks = [
   { name: "Ugly Sell", href: "/farmer/ugly-sell", icon: Star },
   { name: "Pre-list", href: "/farmer/pre-list", icon: CalendarClock },
   { name: "Dashboard", href: "/farmer/dashboard", icon: LayoutDashboard },
+  { name: "Orders", href: "/farmer/orders", icon: ShoppingBag },
   { name: "Wallet", href: "/farmer/wallet", icon: Wallet },
   { name: "Profile", href: "/farmer/profile", icon: User },
 ];
@@ -187,19 +188,8 @@ export default function FarmerNavbar() {
               ))}
             </div>
 
-            {/* Wallet & User Logout */}
+            {/* User Logout */}
             <div className="flex items-center gap-3 pl-3 border-l border-white/10">
-              {/* Farmer Wallet */}
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-700/40 border border-emerald-500/30 rounded-xl">
-                <div className="w-6 h-6 bg-amber-400 rounded-lg flex items-center justify-center text-emerald-900">
-                  <DollarSign size={14} strokeWidth={3} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-black uppercase tracking-tighter text-emerald-300 leading-none">Earnings</span>
-                  <span className="text-xs font-black text-white leading-none">₹{user?.walletBalance || 0}</span>
-                </div>
-              </div>
-
               {user && (
                 <span className="text-xs font-bold text-emerald-300 max-w-[80px] truncate">
                   {user.name}
