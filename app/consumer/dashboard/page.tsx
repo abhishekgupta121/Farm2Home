@@ -562,43 +562,82 @@ function DashboardContent() {
                       My Orders
                     </h2>
                   </div>
-                  
-                  <div className="space-y-4">
+                            <div className="space-y-6">
                     {orders.map((order) => (
-                      <div key={order._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-3xl bg-slate-50 border border-slate-100 gap-4 hover:border-orange-200 transition-all">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{order._id.substring(0, 8)}</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="text-sm font-bold text-slate-900">Farmer: {order.farmerId?.name || "Unknown Farmer"}</span>
+                      <div key={order._id} className="p-6 rounded-[2rem] bg-slate-50 border border-slate-100 hover:border-orange-200 transition-all">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">#{order._id.slice(-8).toUpperCase()}</span>
+                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                order.orderStatus === 'placed' ? 'bg-blue-100 text-blue-700' :
+                                order.orderStatus === 'delivered' ? 'bg-green-100 text-green-700' :
+                                order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-600'
+                              }`}>
+                                {order.orderStatus}
+                              </span>
+                            </div>
+                            <p className="text-sm font-bold text-slate-500">{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                           </div>
-                          <p className="text-slate-700 font-medium">{order.quantity}kg of <span className="font-bold text-slate-900">{order.listingId?.cropName || "Unknown Crop"}</span></p>
-                          <p className="text-xs text-slate-400 font-bold mt-1">Total: ₹{order.totalPrice}</p>
+                          <div className="text-right">
+                            <p className="text-2xl font-black text-slate-900 leading-none">₹{order.totalAmount}</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Paid via Wallet</p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                          <span className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
-                            order.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                            order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                            'bg-slate-200 text-slate-600'
-                          }`}>
-                            {order.status}
-                          </span>
-                          
+
+                        {/* Item List */}
+                        <div className="space-y-2 mb-6">
+                          {order.items.map((item: any, idx: number) => (
+                            <div key={idx} className="flex justify-between items-center text-sm">
+                              <span className="font-bold text-slate-700">{item.quantity}kg {item.cropName}</span>
+                              <span className="text-slate-400 font-bold">₹{item.total}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
+                          {order.orderStatus === 'placed' && (
+                            <button 
+                              onClick={async () => {
+                                if (confirm("Are you sure you want to cancel this order and get a refund?")) {
+                                  try {
+                                    const res = await fetch(`/api/orders/${order._id}/refund`, { method: "POST" });
+                                    const data = await res.json();
+                                    if (res.ok) {
+                                      toast.success("Refund processed successfully!");
+                                      fetchOrders(user._id);
+                                      refreshWallet(user._id);
+                                    } else {
+                                      toast.error(data.error);
+                                    }
+                                  } catch (err) {
+                                    toast.error("Refund failed");
+                                  }
+                                }
+                              }}
+                              className="flex-1 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-black text-xs uppercase tracking-widest transition-all"
+                            >
+                              Cancel & Refund
+                            </button>
+                          )}
                           <button 
                             onClick={() => handleRateFarmer(order)}
-                            className="px-4 py-2 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
+                            disabled={order.orderStatus !== 'delivered'}
+                            className="flex-1 py-3 bg-slate-900 text-white hover:bg-orange-600 rounded-xl font-black text-xs uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                           >
-                            Rate
+                            Rate Farmer
                           </button>
                         </div>
                       </div>
                     ))}
                     {orders.length === 0 && (
-                      <p className="text-slate-500 font-medium text-center py-4">No orders placed yet.</p>
+                      <div className="text-center py-10">
+                        <ShoppingBag className="mx-auto text-slate-200 mb-4" size={48} />
+                        <p className="text-slate-500 font-bold uppercase tracking-widest">No orders found</p>
+                      </div>
                     )}
                   </div>
                 </div>
-
               </>
             )}
           </div>
