@@ -5,11 +5,11 @@ import User from "@/lib/models/User";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
-    const orderId = params.id;
+    const { id: orderId } = await params;
 
     // 1. Fetch Order
     const order = await Order.findById(orderId);

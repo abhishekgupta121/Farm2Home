@@ -17,6 +17,7 @@ import {
   Sprout,
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
+import DeliveryFlipCards from "@/app/components/DeliveryFlipCards";
 
 export default function HomePage() {
   const router = useRouter();
@@ -338,6 +339,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div className="pb-24">
+        <DeliveryFlipCards />
+      </div>
 
       {/* Modern Footer */}
       <footer className="px-6 py-20 lg:px-16 bg-slate-900 text-white rounded-t-[5rem] relative overflow-hidden">

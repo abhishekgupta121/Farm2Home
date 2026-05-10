@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Tractor, Package, Bell, ShoppingBag, ArrowRight, Trash2, Plus, Leaf, TrendingUp, DollarSign, Star, Edit, Pause, Play, RefreshCw, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { LogOut, Tractor, Package, Bell, ShoppingBag, ArrowRight, Trash2, Plus, Leaf, TrendingUp, DollarSign, Star, Edit, Pause, Play, RefreshCw, AlertTriangle, CheckCircle, XCircle, Truck, MapPin, Clock } from "lucide-react";
 import Link from "next/link";
 import FarmerNavbar from "@/app/components/FarmerNavbar";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -14,6 +14,7 @@ export default function FarmerDashboard() {
   const [listings, setListings] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [deliveries, setDeliveries] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,11 +25,20 @@ export default function FarmerDashboard() {
     } else {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      fetchListings(parsedUser._id);
-      fetchOrders(parsedUser._id);
-      fetchReviews(parsedUser._id);
+      fetchData(parsedUser._id);
     }
   }, [router]);
+
+  const fetchData = async (farmerId: string) => {
+    setLoading(true);
+    await Promise.all([
+      fetchListings(farmerId),
+      fetchOrders(farmerId),
+      fetchReviews(farmerId),
+      fetchDeliveries(farmerId)
+    ]);
+    setLoading(false);
+  };
 
   const fetchOrders = async (farmerId: string) => {
     try {
@@ -54,6 +64,29 @@ export default function FarmerDashboard() {
     }
   };
 
+  const fetchDeliveries = async (farmerId: string) => {
+    try {
+      const res = await fetch(`/api/delivery?farmerId=${farmerId}`);
+      const data = await res.json();
+      if (res.ok) setDeliveries(data.deliveries);
+    } catch (err) {
+      console.error("Failed to fetch deliveries:", err);
+    }
+  };
+
+  const handleUpdateDeliveryStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/delivery/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, note: `Status updated to ${status} by farmer.` }),
+      });
+      if (res.ok) fetchDeliveries(user._id);
+    } catch (err) {
+      alert("Failed to update status");
+    }
+  };
+
   const fetchListings = async (farmerId: string) => {
     try {
       const res = await fetch(`/api/crops?farmerId=${farmerId}`);
@@ -63,8 +96,6 @@ export default function FarmerDashboard() {
       }
     } catch (err) {
       console.error("Failed to fetch listings:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -122,25 +153,6 @@ export default function FarmerDashboard() {
     }
   };
 
-  const handleOrderAction = (orderId: string, action: "Accept" | "Reject" | "Delivered") => {
-    setOrders(prev => prev.map(o => {
-      if (o.id === orderId) {
-        let newStatus = o.status;
-        if (action === "Accept") newStatus = "Accepted";
-        if (action === "Reject") newStatus = "Rejected";
-        if (action === "Delivered") newStatus = "Delivered";
-        return { ...o, status: newStatus };
-      }
-      return o;
-    }));
-    
-    const actionText = action === "Accept" ? "accepted" : action === "Reject" ? "rejected" : "delivered";
-    setAlerts(prev => [
-      { id: Date.now(), text: `Order ${orderId} was ${actionText}`, type: action === "Reject" ? "warning" : "success", time: "Just now" },
-      ...prev
-    ]);
-  };
-
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("userRole");
@@ -153,7 +165,10 @@ export default function FarmerDashboard() {
   const generatedAlerts: any[] = [];
 
   listings.forEach(l => {
-    const sold = orders.filter((o: any) => o.listingId?._id === l._id).reduce((acc: number, o: any) => acc + o.quantity, 0);
+    const sold = orders.filter((o: any) => o.items?.some((item: any) => item.productId?._id === l._id)).reduce((acc: number, o: any) => {
+        const item = o.items.find((i: any) => i.productId?._id === l._id);
+        return acc + (item?.quantity || 0);
+    }, 0);
     if (sold > 30) {
       generatedAlerts.push({
         id: `suggest_${l._id}`,
@@ -224,7 +239,7 @@ export default function FarmerDashboard() {
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-blue-300 transition-colors cursor-pointer">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Earnings</span>
-            <span className="text-3xl font-black text-slate-900">₹{orders.reduce((acc, o) => acc + o.totalPrice, 0)}</span>
+            <span className="text-3xl font-black text-slate-900">₹{orders.reduce((acc, o) => acc + o.totalAmount, 0)}</span>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-yellow-300 transition-colors cursor-pointer">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Avg Rating</span>
@@ -240,6 +255,68 @@ export default function FarmerDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Dashboard Area (Listings & Orders) */}
           <div className="lg:col-span-2 space-y-6">
+            
+            {/* Active Deliveries Section */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                  <Truck size={22} className="text-blue-500" />
+                  Active Deliveries
+                </h3>
+                <span className="bg-blue-100 text-blue-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                  {deliveries.filter(d => d.status !== 'delivered').length} In Progress
+                </span>
+              </div>
+              <div className="p-6">
+                {deliveries.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Package size={48} className="text-slate-200 mx-auto mb-3" />
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No active deliveries</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {deliveries.filter(d => d.status !== 'delivered').slice(0, 3).map((delivery) => (
+                      <div key={delivery._id} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                            <Package size={24} className="text-slate-400" />
+                          </div>
+                          <div>
+                            <p className="font-black text-slate-900">{delivery.cropId?.cropName || "Unknown Crop"}</p>
+                            <p className="text-xs font-bold text-slate-500">Customer: {delivery.consumerId?.name}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                delivery.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                delivery.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
+                                delivery.status === 'in_transit' ? 'bg-purple-100 text-purple-700' :
+                                'bg-green-100 text-green-700'
+                              }`}>
+                                {delivery.status.replace('_', ' ')}
+                              </span>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{delivery.method.replace('_', ' ')}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {delivery.status === 'pending' && (
+                            <button onClick={() => handleUpdateDeliveryStatus(delivery._id, 'confirmed')} className="px-4 py-2 bg-green-600 text-white text-[10px] font-black uppercase rounded-xl hover:bg-green-700 transition-all">Confirm</button>
+                          )}
+                          {delivery.status === 'confirmed' && (
+                            <button onClick={() => handleUpdateDeliveryStatus(delivery._id, 'in_transit')} className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase rounded-xl hover:bg-blue-700 transition-all">Ship</button>
+                          )}
+                          {delivery.status === 'in_transit' && (
+                            <button onClick={() => handleUpdateDeliveryStatus(delivery._id, 'delivered')} className="px-4 py-2 bg-slate-900 text-white text-[10px] font-black uppercase rounded-xl hover:bg-slate-800 transition-all">Mark Delivered</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {deliveries.length > 3 && (
+                      <button className="w-full py-3 text-slate-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-slate-600 transition-colors">View all deliveries</button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
             
             {/* Quick Actions */}
             <div className="grid grid-cols-3 gap-4">
@@ -275,7 +352,10 @@ export default function FarmerDashboard() {
               ) : (
                 <div className="space-y-4">
                   {listings.map((listing) => {
-                    const sold = orders.filter(o => o.listingId?._id === listing._id).reduce((acc, o) => acc + o.quantity, 0);
+                    const sold = orders.filter(o => o.items?.some((i: any) => i.productId?._id === listing._id)).reduce((acc, o) => {
+                        const item = o.items.find((i: any) => i.productId?._id === listing._id);
+                        return acc + (item?.quantity || 0);
+                    }, 0);
                     const total = listing.availableQuantityKg + sold;
                     const stockPercentage = total > 0 ? (listing.availableQuantityKg / total) * 100 : 0;
                     
@@ -380,7 +460,46 @@ export default function FarmerDashboard() {
               )}
             </div>
 
-            {/* Incoming Orders */}
+            {/* Logistics & Delivery Settings */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
+              <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                <MapPin className="text-orange-500" size={24} />
+                Logistics Settings
+              </h2>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div>
+                    <p className="font-black text-slate-800">Home Delivery</p>
+                    <p className="text-xs text-slate-500 font-bold">Offer doorstep delivery to customers</p>
+                  </div>
+                  <div className="w-12 h-6 bg-green-500 rounded-full relative cursor-pointer shadow-inner">
+                    <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-md"></div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div>
+                    <p className="font-black text-slate-800">Farm Pickup</p>
+                    <p className="text-xs text-slate-500 font-bold">Allow customers to collect from farm</p>
+                  </div>
+                  <div className="w-12 h-6 bg-green-500 rounded-full relative cursor-pointer shadow-inner">
+                    <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-md"></div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Delivery Radius (km)</label>
+                  <input type="number" defaultValue="25" className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 focus:outline-none focus:border-green-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Estimated Prep Time (days)</label>
+                  <input type="number" defaultValue="2" className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 focus:outline-none focus:border-green-500" />
+                </div>
+                <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95">
+                  Save Logistics
+                </button>
+              </div>
+            </div>
+
+            {/* Recent Orders */}
             <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
@@ -390,28 +509,36 @@ export default function FarmerDashboard() {
                 <button className="text-blue-600 text-sm font-black uppercase tracking-widest hover:underline">View All</button>
               </div>
               <div className="space-y-4">
-                {orders.filter((order: any) => order.status !== 'pending').map((order: any) => (
-                  <div key={order._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-3xl bg-slate-50 border border-slate-100 gap-4 group hover:border-blue-200 transition-all">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{order._id.substring(0, 8)}</span>
-                        <span className="text-slate-300">|</span>
-                        <span className="text-sm font-bold text-slate-900">{order.consumerId?.name || "Test Consumer"}</span>
-                      </div>
-                      <p className="text-slate-700 font-medium">{order.quantity}kg of <span className="font-bold text-slate-900">{order.listingId?.cropName || "Unknown Crop"}</span></p>
-                      <p className="text-xs text-slate-400 font-bold mt-1">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                {orders.length === 0 ? (
+                    <p className="text-slate-500 font-medium text-center py-4">No orders yet.</p>
+                ) : (
+                    orders.map((order: any) => (
+                    <div key={order._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-3xl bg-slate-50 border border-slate-100 gap-4 group hover:border-blue-200 transition-all">
+                        <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{order._id.substring(0, 8)}</span>
+                            <span className="text-slate-300">|</span>
+                            <span className="text-sm font-bold text-slate-900">{order.consumerId?.name || "Consumer"}</span>
+                        </div>
+                        <div className="space-y-1">
+                            {order.items?.map((item: any, idx: number) => (
+                                <p key={idx} className="text-slate-700 font-medium">{item.quantity}kg of <span className="font-bold text-slate-900">{item.cropName}</span></p>
+                            ))}
+                        </div>
+                        <p className="text-xs text-slate-400 font-bold mt-1">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                        <span className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
+                            order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' :
+                            order.paymentStatus === 'transferred_to_farmer' ? 'bg-blue-100 text-blue-700' :
+                            'bg-slate-200 text-slate-600'
+                        }`}>
+                            {order.paymentStatus.replace(/_/g, ' ')}
+                        </span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                      <span className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
-                        order.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                        order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                        'bg-slate-200 text-slate-600'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                    ))
+                )}
               </div>
             </div>
 
@@ -465,11 +592,11 @@ export default function FarmerDashboard() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">Total Earnings</span>
-                  <span className="font-black text-slate-900">₹{orders.reduce((acc, o) => acc + o.totalPrice, 0)}</span>
+                  <span className="font-black text-slate-900">₹{orders.reduce((acc, o) => acc + o.totalAmount, 0)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">Quantity Sold</span>
-                  <span className="font-black text-slate-900">{orders.reduce((acc, o) => acc + o.quantity, 0)} kg</span>
+                  <span className="font-black text-slate-900">{orders.reduce((acc, o) => acc + o.items.reduce((sum: number, i: any) => sum + i.quantity, 0), 0)} kg</span>
                 </div>
               </div>
               

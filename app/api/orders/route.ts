@@ -54,11 +54,14 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
     const body = await req.json();
-    const { userId, items, totalAmount } = body;
+    const { userId, items, totalAmount, deliveryMethod, deliveryCharge } = body;
 
     if (!userId || !items || items.length === 0) {
       return NextResponse.json({ error: "Invalid order data" }, { status: 400 });
     }
+
+    // Import Delivery model here to avoid circular dependencies if any
+    const Delivery = (await import("@/lib/models/Delivery")).default;
 
     // 1. Fetch User and Check Balance
     const user = await User.findById(userId);
@@ -102,21 +105,45 @@ export async function POST(req: Request) {
       orderStatus: "placed",
     });
 
-    // 4. Deduct Consumer Wallet & Add to Admin Wallet (Escrow)
+    // 4. Create Deliveries for each item
+    const addressData = typeof user.address === 'string' 
+      ? { line1: user.address, city: "N/A", state: "N/A", pinCode: user.pinCode }
+      : { 
+          line1: user.address.addressLine1, 
+          line2: user.address.addressLine2 || "", 
+          city: user.address.city, 
+          state: user.address.state, 
+          pinCode: user.pinCode 
+        };
+
+    for (const item of items) {
+      await Delivery.create({
+        consumerId: userId,
+        farmerId: item.productId.farmerId,
+        cropId: item.productId._id,
+        method: deliveryMethod || "home_delivery",
+        status: "pending",
+        address: addressData,
+        charges: deliveryCharge || 0,
+        timeline: [{ stage: "Order Placed", note: "Order successfully placed and held in escrow." }]
+      });
+    }
+
+    // 5. Deduct Consumer Wallet & Add to Admin Wallet (Escrow)
     user.walletBalance -= totalAmount;
     await user.save();
 
     admin.walletBalance += totalAmount;
     await admin.save();
 
-    // 5. Update Crop Quantities (Deduct stock)
+    // 6. Update Crop Quantities (Deduct stock)
     for (const item of items) {
         await Crop.findByIdAndUpdate(item.productId._id, {
             $inc: { availableQuantityKg: -item.quantity }
         });
     }
 
-    // 6. Clear User's Cart
+    // 7. Clear User's Cart
     await Cart.findOneAndUpdate({ userId }, { items: [] });
 
     return NextResponse.json({ 

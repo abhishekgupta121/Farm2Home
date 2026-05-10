@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, ShieldCheck, CheckCircle, XCircle, Clock, Search, Filter, ShoppingBag, Leaf, Tractor, Tag } from "lucide-react";
+import { LogOut, ShieldCheck, CheckCircle, XCircle, Clock, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, Truck, Package } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
@@ -11,8 +11,9 @@ export default function AdminDashboard() {
   const [user, setUser] = useState<any>(null);
   const [pendingCrops, setPendingCrops] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"crops" | "orders">("crops");
+  const [activeTab, setActiveTab] = useState<"crops" | "orders" | "deliveries">("crops");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function AdminDashboard() {
     await Promise.all([
       fetchPendingCrops(),
       fetchOrders(),
+      fetchDeliveries(),
       refreshWallet(userId)
     ]);
     setLoading(false);
@@ -53,6 +55,29 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error("Wallet refresh failed", err);
+    }
+  };
+
+  const fetchDeliveries = async () => {
+    try {
+      const res = await fetch(`/api/delivery?admin=true`);
+      const data = await res.json();
+      if (res.ok) setDeliveries(data.deliveries);
+    } catch (err) {
+      console.error("Failed to fetch deliveries", err);
+    }
+  };
+
+  const handleUpdateDeliveryStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/delivery/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, note: `Admin updated status to ${status}.` }),
+      });
+      if (res.ok) fetchDeliveries();
+    } catch (err) {
+      alert("Failed to update delivery status");
     }
   };
 
@@ -136,6 +161,13 @@ export default function AdminDashboard() {
     order.consumerId?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const filteredDeliveries = deliveries.filter(d => 
+    d._id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    d.cropId?.cropName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    d.farmerId?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    d.consumerId?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (!user || loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="animate-spin w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full"></div>
@@ -179,28 +211,42 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      <div className="p-4 sm:p-8 max-w-[1400px] mx-auto space-y-8">
-        <div className="flex p-1.5 bg-slate-200 w-fit rounded-[1.5rem] shadow-inner">
+      {/* Tab Switcher */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-[1400px] mx-auto flex overflow-x-auto no-scrollbar">
           <button 
             onClick={() => setActiveTab("crops")}
-            className={`px-8 py-3 rounded-[1.2rem] font-black text-sm tracking-widest transition-all ${activeTab === 'crops' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-8 py-4 font-black text-sm uppercase tracking-widest transition-all border-b-4 flex-shrink-0 ${activeTab === "crops" ? "border-blue-500 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
           >
-            PENDING CROPS ({pendingCrops.length})
+            Crop Approvals ({pendingCrops.length})
           </button>
           <button 
             onClick={() => setActiveTab("orders")}
-            className={`px-8 py-3 rounded-[1.2rem] font-black text-sm tracking-widest transition-all ${activeTab === 'orders' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-8 py-4 font-black text-sm uppercase tracking-widest transition-all border-b-4 flex-shrink-0 ${activeTab === "orders" ? "border-blue-500 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
           >
-            ORDER MANAGEMENT ({orders.length})
+            Order Management ({orders.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab("deliveries")}
+            className={`px-8 py-4 font-black text-sm uppercase tracking-widest transition-all border-b-4 flex-shrink-0 ${activeTab === "deliveries" ? "border-blue-500 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
+          >
+            All Deliveries ({deliveries.length})
           </button>
         </div>
+      </div>
 
+      <div className="p-4 sm:p-8 max-w-[1400px] mx-auto space-y-8">
+        {/* Search Bar */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
           <div className="relative w-full">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
               type="text" 
-              placeholder={activeTab === "crops" ? "Search crops or farmers..." : "Search Order ID or Consumer..."} 
+              placeholder={
+                activeTab === "crops" ? "Search crops or farmers..." : 
+                activeTab === "orders" ? "Search Order ID or Consumer..." :
+                "Search Deliveries..."
+              } 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:border-blue-500 transition-all"
@@ -210,153 +256,248 @@ export default function AdminDashboard() {
 
         {activeTab === "crops" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredCrops.map((crop) => (
-              <div key={crop._id} className="group bg-white rounded-[2rem] p-6 shadow-sm border border-slate-200 flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden shrink-0 relative border border-slate-100">
-                    {crop.imageUrl ? (
-                      <img src={crop.imageUrl} alt={crop.cropName} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-300">
-                        <Leaf size={24} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-black text-slate-900 truncate">{crop.cropName}</h3>
-                    <p className="text-sm font-bold text-slate-500">Farmer: {crop.farmerName}</p>
-                    <span className="inline-block mt-2 px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-[10px] font-black uppercase tracking-widest border border-blue-100">
-                      {crop.listingType}
-                    </span>
-                  </div>
-                </div>
-                <div className="bg-slate-50 rounded-2xl p-4 mb-6 space-y-2 text-sm font-medium">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Price</span>
-                    <span className="text-slate-900 font-black">₹{crop.pricePerKg}/kg</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Stock</span>
-                    <span className="text-slate-900 font-black">{crop.availableQuantityKg} kg</span>
-                  </div>
-                </div>
-                <div className="mt-auto flex gap-3">
-                  <button onClick={() => handleStatusUpdate(crop._id, "active")} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 text-sm">
-                    Approve
-                  </button>
-                  <button onClick={() => handleStatusUpdate(crop._id, "rejected")} className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 text-sm">
-                    Reject
-                  </button>
-                </div>
+            {filteredCrops.length === 0 ? (
+              <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+                <ShieldCheck size={64} className="mx-auto text-slate-300 mb-6" />
+                <h3 className="text-2xl font-black text-slate-900 mb-2">All caught up!</h3>
+                <p className="text-slate-500 font-medium">There are no pending listings matching your search.</p>
               </div>
-            ))}
+            ) : (
+              filteredCrops.map((crop) => (
+                <div key={crop._id} className="group bg-white rounded-[2rem] p-6 shadow-sm border border-slate-200 flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden shrink-0 relative border border-slate-100">
+                      {crop.imageUrl ? (
+                        <img src={crop.imageUrl} alt={crop.cropName} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-300">
+                          <Leaf size={24} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-black text-slate-900 truncate">{crop.cropName}</h3>
+                      <p className="text-sm font-bold text-slate-500">Farmer: {crop.farmerName}</p>
+                      <span className="inline-block mt-2 px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-[10px] font-black uppercase tracking-widest border border-blue-100">
+                        {crop.listingType}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 rounded-2xl p-4 mb-6 space-y-2 text-sm font-medium">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Price</span>
+                      <span className="text-slate-900 font-black">₹{crop.pricePerKg}/kg</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Stock</span>
+                      <span className="text-slate-900 font-black">{crop.availableQuantityKg} kg</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-bold">Pincode</span>
+                      <span className="text-slate-900 font-black">{crop.pinCode}</span>
+                    </div>
+                  </div>
+                  <div className="mt-auto flex gap-3">
+                    <button onClick={() => handleStatusUpdate(crop._id, "active")} className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-green-500/20 text-sm flex justify-center items-center gap-2">
+                      <CheckCircle size={18} /> Approve
+                    </button>
+                    <button onClick={() => handleStatusUpdate(crop._id, "rejected")} className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 text-sm flex justify-center items-center gap-2">
+                      <XCircle size={18} /> Reject
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : activeTab === "orders" ? (
+          <div className="space-y-6">
+            {filteredOrders.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+                <Package size={64} className="mx-auto text-slate-300 mb-6" />
+                <h3 className="text-2xl font-black text-slate-900 mb-2">No Orders Found</h3>
+                <p className="text-slate-500 font-medium">No order records matching your search were found.</p>
+              </div>
+            ) : (
+              filteredOrders.map((order) => (
+                <div key={order._id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 hover:border-blue-400 transition-all overflow-hidden relative group">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-200 group-hover:bg-blue-500 transition-colors"></div>
+                  
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
+                    <div className="flex-1 space-y-6">
+                      <div className="flex flex-wrap items-center gap-4">
+                        <span className="px-4 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest">
+                          ORDER #{order._id.slice(-8).toUpperCase()}
+                        </span>
+                        <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest border ${
+                          order.paymentStatus === 'paid' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-green-50 text-green-600 border-green-200'
+                        }`}>
+                          {order.paymentStatus === 'paid' ? 'HOLDING IN ESCROW' : 'TRANSFERRED TO FARMER'}
+                        </span>
+                        <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
+                          <Clock size={14} />
+                          {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Consumer Details</p>
+                          <h4 className="text-lg font-black text-slate-900 mb-1">{order.consumerId?.name}</h4>
+                          <p className="text-sm font-bold text-slate-600 mb-2">{order.consumerId?.mobileNumber}</p>
+                          <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                            {formatAddress(order.consumerId?.address)} <br/>
+                            <span className="font-black text-slate-400">PIN: {order.consumerId?.pinCode}</span>
+                          </p>
+                        </div>
+
+                        <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100/50">
+                          <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">Order Summary</p>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-bold text-slate-600">Total Items</span>
+                              <span className="text-sm font-black text-slate-900">{order.items.length} Varieties</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-bold text-slate-600">Total Weight</span>
+                              <span className="text-sm font-black text-slate-900">{order.items.reduce((acc: number, item: any) => acc + item.quantity, 0)} kg</span>
+                            </div>
+                            <div className="pt-2 border-t border-blue-100 flex justify-between items-center mt-2">
+                              <span className="text-sm font-black text-blue-700">Total Payout</span>
+                              <span className="text-2xl font-black text-blue-900">₹{order.totalAmount}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Itemized Breakdown & Farmer Info</p>
+                        <div className="space-y-3">
+                          {order.items.map((item: any, idx: number) => (
+                            <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border border-slate-100 rounded-2xl gap-4">
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-black text-xs">
+                                  {item.quantity}kg
+                                </div>
+                                <div>
+                                  <p className="font-black text-slate-900 text-sm">{item.cropName}</p>
+                                  <p className="text-[10px] font-bold text-slate-500">₹{item.pricePerKg}/kg • Total: ₹{item.total}</p>
+                                </div>
+                              </div>
+                              <div className="text-left sm:text-right border-l sm:border-l-0 sm:border-r border-slate-100 pl-4 sm:pl-0 sm:pr-4">
+                                <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Farmer</p>
+                                <p className="text-xs font-black text-slate-900">{item.farmerId?.name || "N/A"}</p>
+                                <p className="text-[10px] font-medium text-slate-500">{formatAddress(item.farmerId?.address)}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="w-full lg:w-64 shrink-0 space-y-4">
+                      {order.paymentStatus === "paid" ? (
+                        <div className="bg-amber-50 rounded-3xl p-6 border border-amber-100 text-center">
+                          <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <ShoppingBag size={24} />
+                          </div>
+                          <h5 className="font-black text-slate-900 mb-2">Pending Release</h5>
+                          <p className="text-xs font-medium text-slate-500 mb-6">Funds are held in escrow. Verify order delivery before releasing.</p>
+                          <button 
+                            onClick={() => handleReleasePayment(order._id)}
+                            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/30 active:scale-95"
+                          >
+                            Release ₹{order.totalAmount}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="bg-green-50 rounded-3xl p-6 border border-green-100 text-center">
+                          <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <CheckCircle size={24} />
+                          </div>
+                          <h5 className="font-black text-green-800 mb-1">Payment Released</h5>
+                          <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Transaction Complete</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         ) : (
           <div className="space-y-6">
-            {filteredOrders.map((order) => (
-              <div key={order._id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 hover:border-blue-400 transition-all overflow-hidden relative group">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-200 group-hover:bg-blue-500 transition-colors"></div>
-                
-                <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
-                  <div className="flex-1 space-y-6">
-                    <div className="flex flex-wrap items-center gap-4">
-                      <span className="px-4 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest">
-                        ORDER #{order._id.slice(-8).toUpperCase()}
-                      </span>
-                      <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest border ${
-                        order.paymentStatus === 'paid' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-green-50 text-green-600 border-green-200'
-                      }`}>
-                        {order.paymentStatus === 'paid' ? 'HOLDING IN ESCROW' : 'TRANSFERRED TO FARMER'}
-                      </span>
-                      <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
-                        <Clock size={14} />
-                        {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Consumer Details</p>
-                        <h4 className="text-lg font-black text-slate-900 mb-1">{order.consumerId?.name}</h4>
-                        <p className="text-sm font-bold text-slate-600 mb-2">{order.consumerId?.mobileNumber}</p>
-                        <p className="text-xs font-medium text-slate-500 leading-relaxed">
-                          {formatAddress(order.consumerId?.address)} <br/>
-                          <span className="font-black text-slate-400">PIN: {order.consumerId?.pinCode}</span>
-                        </p>
-                      </div>
-
-                      <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100/50">
-                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">Order Summary</p>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-bold text-slate-600">Total Items</span>
-                            <span className="text-sm font-black text-slate-900">{order.items.length} Varieties</span>
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
+                    <th className="p-6">Order Details</th>
+                    <th className="p-6">Farmer / Consumer</th>
+                    <th className="p-6">Method</th>
+                    <th className="p-6">Status</th>
+                    <th className="p-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredDeliveries.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-20 text-center">
+                        <Package size={64} className="mx-auto text-slate-200 mb-4" />
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No delivery records matching your search</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredDeliveries.map((d) => (
+                      <tr key={d._id} className="group hover:bg-slate-50/50 transition-colors">
+                        <td className="p-6">
+                          <div className="font-black text-slate-900">{d.cropId?.cropName || "Unknown Crop"}</div>
+                          <div className="text-xs font-bold text-slate-400 mt-1">Ordered on {new Date(d.createdAt).toLocaleDateString()}</div>
+                          <div className="text-[10px] font-black text-slate-300 mt-1 uppercase tracking-tighter">ID: {d._id.slice(-8)}</div>
+                        </td>
+                        <td className="p-6">
+                          <div className="text-sm">
+                            <span className="text-slate-400 font-bold uppercase text-[9px] block mb-1">Farmer</span>
+                            <span className="font-black text-slate-900">{d.farmerId?.name}</span>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-bold text-slate-600">Total Weight</span>
-                            <span className="text-sm font-black text-slate-900">{order.items.reduce((acc: number, item: any) => acc + item.quantity, 0)} kg</span>
+                          <div className="text-sm mt-3">
+                            <span className="text-slate-400 font-bold uppercase text-[9px] block mb-1">Consumer</span>
+                            <span className="font-black text-slate-900">{d.consumerId?.name}</span>
                           </div>
-                          <div className="pt-2 border-t border-blue-100 flex justify-between items-center mt-2">
-                            <span className="text-sm font-black text-blue-700">Total Payout</span>
-                            <span className="text-2xl font-black text-blue-900">₹{order.totalAmount}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Itemized Breakdown & Farmer Info</p>
-                      <div className="space-y-3">
-                        {order.items.map((item: any, idx: number) => (
-                          <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border border-slate-100 rounded-2xl gap-4">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-black text-xs">
-                                {item.quantity}kg
-                              </div>
-                              <div>
-                                <p className="font-black text-slate-900 text-sm">{item.cropName}</p>
-                                <p className="text-[10px] font-bold text-slate-500">₹{item.pricePerKg}/kg • Total: ₹{item.total}</p>
-                              </div>
-                            </div>
-                            <div className="text-left sm:text-right border-l sm:border-l-0 sm:border-r border-slate-100 pl-4 sm:pl-0 sm:pr-4">
-                              <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Farmer</p>
-                              <p className="text-xs font-black text-slate-900">{item.farmerId?.name || "N/A"}</p>
-                              <p className="text-[10px] font-medium text-slate-500">{formatAddress(item.farmerId?.address)}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="w-full lg:w-64 shrink-0 space-y-4">
-                    {order.paymentStatus === "paid" ? (
-                      <div className="bg-amber-50 rounded-3xl p-6 border border-amber-100 text-center">
-                        <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <ShoppingBag size={24} />
-                        </div>
-                        <h5 className="font-black text-slate-900 mb-2">Pending Release</h5>
-                        <p className="text-xs font-medium text-slate-500 mb-6">Funds are held in escrow. Verify order delivery before releasing.</p>
-                        <button 
-                          onClick={() => handleReleasePayment(order._id)}
-                          className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/30 active:scale-95"
-                        >
-                          Release ₹{order.totalAmount}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="bg-green-50 rounded-3xl p-6 border border-green-100 text-center">
-                        <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <CheckCircle size={24} />
-                        </div>
-                        <h5 className="font-black text-green-800 mb-1">Payment Released</h5>
-                        <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Transaction Complete</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+                        </td>
+                        <td className="p-6">
+                          <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600">
+                            {d.method.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="p-6">
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                            d.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                            d.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
+                            d.status === 'in_transit' ? 'bg-purple-100 text-purple-700' :
+                            d.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {d.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="p-6 text-right">
+                          <select 
+                            value={d.status}
+                            onChange={(e) => handleUpdateDeliveryStatus(d._id, e.target.value)}
+                            className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-black text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="in_transit">In Transit</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

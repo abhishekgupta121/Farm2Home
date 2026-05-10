@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense, useCallback } from "react";
+import React, { useEffect, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogOut, ShoppingCart, MapPin, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, X } from "lucide-react";
 import Image from "next/image";
@@ -25,7 +25,7 @@ const formatAddress = (addr: any, pinCode: string, fallback: string) => {
 };
 
 function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, qty: number) => void }) {
-  const minQty = Math.min(["vegetable", "fruit"].includes(crop.category) ? 5 : 20, crop.availableQuantityKg);
+  const minQty = Math.min(["vegetable", "fruit"].includes(crop.category || "") ? 5 : 20, crop.availableQuantityKg || 1);
   const [quantity, setQuantity] = useState<number | string>(minQty);
   const [added, setAdded] = useState(false);
 
@@ -211,14 +211,18 @@ function DashboardContent() {
     if (!userData) {
       router.push("/login");
     } else {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      // Fetch crops based on url params OR default to user pinCode if no location specified
-      fetchCrops(parsedUser.pinCode);
-      // Refresh wallet balance from DB
-      refreshWallet(parsedUser._id);
-      // Fetch order history
-      fetchOrders(parsedUser._id);
+      const parsedUser = userData ? JSON.parse(userData) : null;
+      if (parsedUser) {
+        setUser(parsedUser);
+        // Fetch crops based on url params OR default to user pinCode if no location specified
+        fetchCrops(parsedUser.pinCode);
+        // Refresh wallet balance from DB
+        refreshWallet(parsedUser._id);
+        // Fetch order history
+        fetchOrders(parsedUser._id);
+      } else {
+        router.push("/login");
+      }
     }
   }, [searchParams]); // Re-fetch when URL changes
 

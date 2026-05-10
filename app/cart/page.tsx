@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import DeliverySelector from "@/app/components/DeliverySelector";
 
 const formatAddress = (addr: any, fallback: string) => {
   if (!addr) return fallback;
@@ -16,7 +17,7 @@ const formatAddress = (addr: any, fallback: string) => {
 };
 
 function CartItemCard({ item, handleUpdateQuantity, handleRemove, updatingId }: any) {
-  const minQty = Math.min(["vegetable", "fruit"].includes(item.productId?.category) ? 5 : 20, item.productId?.availableQuantityKg || 1);
+  const minQty = Math.min(["vegetable", "fruit"].includes(item.productId?.category || "") ? 5 : 20, item.productId?.availableQuantityKg || 1);
   const [localQty, setLocalQty] = useState<number | string>(item.quantity);
 
   useEffect(() => {
@@ -111,6 +112,8 @@ export default function CartPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderResult, setOrderResult] = useState<any>(null);
+  const [deliveryMethod, setDeliveryMethod] = useState("home_delivery");
+  const [deliveryCharge, setDeliveryCharge] = useState(40);
 
   // Auth check
   useEffect(() => {
@@ -138,7 +141,7 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     if (!user || !cart) return;
-    if (user.walletBalance < totalPrice) {
+    if (user.walletBalance < totalPrice + deliveryCharge) {
       toast.error("Insufficient wallet balance!");
       return;
     }
@@ -151,7 +154,9 @@ export default function CartPage() {
         body: JSON.stringify({
           userId: user._id,
           items: cart.items,
-          totalAmount: totalPrice,
+          totalAmount: totalPrice + deliveryCharge,
+          deliveryMethod,
+          deliveryCharge,
         }),
       });
 
@@ -268,16 +273,28 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-4">
-              {cart.items.map((item: any) => (
-                <CartItemCard 
-                  key={item._id} 
-                  item={item} 
-                  handleUpdateQuantity={handleUpdateQuantity} 
-                  handleRemove={handleRemove} 
-                  updatingId={updatingId} 
-                />
-              ))}
+            {/* Left: Cart Items & Delivery Selector */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="space-y-4">
+                {cart.items.map((item: any) => (
+                  <CartItemCard 
+                    key={item._id} 
+                    item={item} 
+                    handleUpdateQuantity={handleUpdateQuantity} 
+                    handleRemove={handleRemove} 
+                    updatingId={updatingId} 
+                  />
+                ))}
+              </div>
+
+              {/* Delivery Selector */}
+              <DeliverySelector 
+                selected={deliveryMethod} 
+                onSelect={(method, charge) => {
+                  setDeliveryMethod(method as any);
+                  setDeliveryCharge(charge);
+                }} 
+              />
             </div>
 
             <div className="lg:col-span-1">
@@ -291,14 +308,16 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between text-slate-600 font-medium">
                     <span>Delivery Fee</span>
-                    <span className="text-green-600 font-bold">Free</span>
+                    <span className={deliveryCharge === 0 ? "text-green-600 font-bold" : "text-slate-900 font-bold"}>
+                      {deliveryCharge === 0 ? "Free" : `₹${deliveryCharge}`}
+                    </span>
                   </div>
                 </div>
                 
                 <div className="border-t border-slate-100 pt-6 mb-6">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-slate-900">Total</span>
-                    <span className="text-3xl font-black text-slate-900">₹{totalPrice}</span>
+                    <span className="text-3xl font-black text-slate-900">₹{totalPrice + deliveryCharge}</span>
                   </div>
                 </div>
 
