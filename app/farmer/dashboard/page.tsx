@@ -378,79 +378,14 @@ export default function FarmerDashboard() {
               )}
             </div>
 
-            {/* Incoming Orders */}
-            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                  <ShoppingBag className="text-blue-600" size={28} />
-                  Recent Orders
-                </h2>
-                <button className="text-blue-600 text-sm font-black uppercase tracking-widest hover:underline">View All</button>
-              </div>
-              <div className="space-y-4">
-                {orders.map((order: any) => (
-                  <div key={order._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-3xl bg-slate-50 border border-slate-100 gap-4 group hover:border-blue-200 transition-all">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{order._id.substring(0, 8)}</span>
-                        <span className="text-slate-300">|</span>
-                        <span className="text-sm font-bold text-slate-900">{order.consumerId?.name || "Test Consumer"}</span>
-                      </div>
-                      <p className="text-slate-700 font-medium">{order.quantity}kg of <span className="font-bold text-slate-900">{order.listingId?.cropName || "Unknown Crop"}</span> — <span className="text-green-600 font-bold">₹{order.totalPrice}</span></p>
-                      <p className="text-xs text-slate-400 font-bold mt-1">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                      <span className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
-                        order.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                        order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                        'bg-slate-200 text-slate-600'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
 
           </div>
 
           {/* Right Sidebar (Notifications & Profile Snapshot) */}
           <div className="space-y-6">
             
-            {/* Alerts System */}
-            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="relative">
-                  <Bell className="text-slate-900" size={28} />
-                  {generatedAlerts.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white shadow-sm"></span>
-                    </span>
-                  )}
-                </div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Smart Alerts</h2>
-              </div>
-              
-              <div className="space-y-4">
-                {generatedAlerts.map((alert) => (
-                  <div key={alert.id} className={`p-5 rounded-3xl border transition-all cursor-pointer flex gap-3 items-start ${alert.bgColor} hover:brightness-95`}>
-                    {alert.icon === "alert" ? <AlertTriangle className="text-amber-600 shrink-0" size={20} /> :
-                     alert.icon === "order" ? <ShoppingBag className="text-blue-600 shrink-0" size={20} /> :
-                     <TrendingUp className="text-green-600 shrink-0" size={20} />}
-                    <div>
-                      <p className={`text-sm leading-relaxed font-bold text-slate-900`}>
-                        {alert.message}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {generatedAlerts.length === 0 && (
-                  <p className="text-slate-500 font-medium text-center py-4">No alerts. All good!</p>
-                )}
-              </div>
-            </div>
+
 
             {/* Farm Performance Section */}
             <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">

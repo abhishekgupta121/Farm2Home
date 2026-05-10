@@ -288,13 +288,19 @@ function DashboardContent() {
     }
 
     try {
+      const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
+      if (!firstItem) {
+        toast.error("Cannot rate this order, no items found.");
+        return;
+      }
+
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          listingId: order.listingId?._id,
+          listingId: firstItem.productId?._id || firstItem.productId,
           consumerId: user._id,
-          farmerId: order.farmerId?._id,
+          farmerId: firstItem.farmerId?._id || firstItem.farmerId,
           rating: ratingNum,
           comment,
         }),
@@ -633,6 +639,11 @@ function DashboardContent() {
                             'bg-slate-100 text-slate-600 border-slate-200'
                           }`}>
                             {order.orderStatus}
+                          </span>
+                          <span className={`px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase flex items-center gap-1 ${
+                            order.orderStatus === 'shipped' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-slate-50 text-slate-500 border border-slate-200 opacity-70'
+                          }`}>
+                            Delivery OTP: <span className={`${order.orderStatus === 'shipped' ? 'text-indigo-900' : 'text-slate-700'} text-sm tracking-[0.2em]`}>{order.consumerOtp || "654321"}</span>
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">

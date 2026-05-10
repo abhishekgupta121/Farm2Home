@@ -15,6 +15,8 @@ export interface IOrder extends mongoose.Document {
   totalAmount: number;
   paymentStatus: "paid" | "pending" | "transferred_to_farmer" | "refunded";
   orderStatus: "placed" | "shipped" | "delivered" | "cancelled" | "confirmed";
+  farmerOtp: string;
+  consumerOtp: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +49,8 @@ const OrderSchema = new mongoose.Schema<IOrder>(
       enum: ["placed", "shipped", "delivered", "cancelled", "confirmed"], 
       default: "placed" 
     },
+    farmerOtp: { type: String, required: true },
+    consumerOtp: { type: String, required: true },
   },
   { timestamps: true }
 );
