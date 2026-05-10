@@ -45,10 +45,25 @@ export async function GET(req: Request) {
       query.category = { $in: category.split(",") };
     }
 
-    // 3. Location Filter
+    // 3. Location Filter (Better Search + Partial Pincode Match)
     const location = searchParams.get("location");
     if (location) {
-      query.location = { $regex: location, $options: "i" };
+      let pinSearch = location;
+      // If it looks like a 6-digit pincode, use the first 4 digits for a broader regional search
+      if (/^\d{6}$/.test(location)) {
+        pinSearch = location.substring(0, 4);
+      }
+
+      query.$or = [
+        { pinCode: { $regex: pinSearch, $options: "i" } },
+        { location: { $regex: location, $options: "i" } }
+      ];
+    }
+
+    // 4. Listing Type Filter
+    const listingType = searchParams.get("listingType");
+    if (listingType) {
+      query.listingType = { $in: listingType.split(",") };
     }
 
     // 4. Price Filter
@@ -75,10 +90,16 @@ export async function GET(req: Request) {
     // 7. Search Filter (by cropName or farmerName)
     const search = searchParams.get("search");
     if (search) {
-      query.$or = [
+      const searchOr = [
         { cropName: { $regex: search, $options: "i" } },
         { farmerName: { $regex: search, $options: "i" } }
       ];
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, { $or: searchOr }];
+        delete query.$or;
+      } else {
+        query.$or = searchOr;
+      }
     }
 
     // 8. Sorting

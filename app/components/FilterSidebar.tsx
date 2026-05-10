@@ -11,11 +11,7 @@ interface FilterSidebarProps {
 export default function FilterSidebar({ initialFilters, onFilterChange }: FilterSidebarProps) {
   const [filters, setFilters] = useState({
     category: [] as string[],
-    minPrice: "",
-    maxPrice: "",
-    organic: false,
-    verified: false,
-    inStock: false,
+    listingType: [] as string[],
     location: "",
     search: "",
     ...initialFilters,
@@ -74,55 +70,39 @@ export default function FilterSidebar({ initialFilters, onFilterChange }: Filter
         </div>
       </div>
 
-      {/* Price Range */}
+      {/* Listing Type */}
       <div className="mb-8">
-        <h4 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-widest">Price Range (₹)</h4>
-        <div className="flex items-center gap-3">
-          <input 
-            type="number" 
-            placeholder="Min" 
-            value={filters.minPrice}
-            onChange={(e) => setFilters({...filters, minPrice: e.target.value})}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500 transition-colors"
-          />
-          <span className="text-slate-400">-</span>
-          <input 
-            type="number" 
-            placeholder="Max" 
-            value={filters.maxPrice}
-            onChange={(e) => setFilters({...filters, maxPrice: e.target.value})}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500 transition-colors"
-          />
+        <h4 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-widest">Listing Type</h4>
+        <div className="space-y-2">
+          {[
+            { id: "standard", label: "Standard" },
+            { id: "pre-list", label: "Pre-listed" },
+            { id: "ugly-sell", label: "Ugly Buy" }
+          ].map((type) => (
+            <label key={type.id} className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative flex items-center justify-center w-5 h-5 rounded border border-slate-300 group-hover:border-orange-500 transition-colors">
+                <input 
+                   type="checkbox" 
+                   className="peer sr-only"
+                   checked={filters.listingType?.includes(type.id) || false}
+                   onChange={() => {
+                     setFilters((prev: any) => {
+                       const isSelected = (prev.listingType || []).includes(type.id);
+                       const newType = isSelected
+                         ? prev.listingType.filter((t: string) => t !== type.id)
+                         : [...(prev.listingType || []), type.id];
+                       return { ...prev, listingType: newType };
+                     });
+                   }}
+                />
+                <div className="absolute inset-0 bg-orange-500 scale-0 peer-checked:scale-100 transition-transform rounded flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                </div>
+              </div>
+              <span className="text-slate-600 font-medium group-hover:text-slate-900 transition-colors">{type.label}</span>
+            </label>
+          ))}
         </div>
-      </div>
-
-      {/* Toggles */}
-      <div className="mb-8 space-y-4">
-        <h4 className="font-bold text-slate-900 mb-3 text-sm uppercase tracking-widest">Preferences</h4>
-        
-        <label className="flex items-center justify-between cursor-pointer group">
-          <span className="text-slate-600 font-medium group-hover:text-slate-900 transition-colors">Organic Only</span>
-          <div className="relative inline-flex items-center">
-            <input type="checkbox" className="sr-only peer" checked={filters.organic || false} onChange={() => handleCheckboxChange("organic")} />
-            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-          </div>
-        </label>
-
-        <label className="flex items-center justify-between cursor-pointer group">
-          <span className="text-slate-600 font-medium group-hover:text-slate-900 transition-colors">Verified Farmers</span>
-          <div className="relative inline-flex items-center">
-            <input type="checkbox" className="sr-only peer" checked={filters.verified || false} onChange={() => handleCheckboxChange("verified")} />
-            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-          </div>
-        </label>
-
-        <label className="flex items-center justify-between cursor-pointer group">
-          <span className="text-slate-600 font-medium group-hover:text-slate-900 transition-colors">In Stock Only</span>
-          <div className="relative inline-flex items-center">
-            <input type="checkbox" className="sr-only peer" checked={filters.inStock || false} onChange={() => handleCheckboxChange("inStock")} />
-            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-          </div>
-        </label>
       </div>
 
       {/* Location */}

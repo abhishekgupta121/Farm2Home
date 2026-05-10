@@ -12,11 +12,15 @@ import FilterDrawer from "@/app/components/FilterDrawer";
 import FilterChips from "@/app/components/FilterChips";
 import ProductSkeleton from "@/app/components/ProductSkeleton";
 
-const formatAddress = (addr: any, fallback: string) => {
-  if (!addr) return fallback;
-  if (typeof addr === 'string') return addr;
+const formatAddress = (addr: any, pinCode: string, fallback: string) => {
+  if (!addr) return fallback || pinCode;
+  if (typeof addr === 'string') return `${addr}${pinCode ? ` - ${pinCode}` : ""}`;
   const parts = [addr.addressLine1, addr.addressLine2, addr.city, addr.state].filter(Boolean);
-  return parts.length > 0 ? parts.join(", ") : fallback;
+  let formatted = parts.length > 0 ? parts.join(", ") : fallback;
+  if (pinCode && !formatted.includes(pinCode)) {
+    formatted += ` - ${pinCode}`;
+  }
+  return formatted;
 };
 
 function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, qty: number) => void }) {
@@ -113,7 +117,7 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
           </div>
           <div className="flex flex-col text-sm">
             <span className="text-slate-500 font-bold mb-1">Full Address</span>
-            <span className="text-slate-900 font-bold capitalize leading-tight">{formatAddress(crop.farmerId?.address, crop.location || crop.pinCode)}</span>
+            <span className="text-slate-900 font-bold capitalize leading-tight">{formatAddress(crop.farmerId?.address, crop.pinCode, crop.location)}</span>
           </div>
           <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200">
             <span className="text-slate-500 font-bold">Availability</span>
@@ -178,11 +182,7 @@ function DashboardContent() {
   // Parse filters from URL
   const currentFilters = {
     category: searchParams.get("category") ? searchParams.get("category")?.split(",") : [],
-    minPrice: searchParams.get("minPrice") || "",
-    maxPrice: searchParams.get("maxPrice") || "",
-    organic: searchParams.get("organic") === "true",
-    verified: searchParams.get("verified") === "true",
-    inStock: searchParams.get("inStock") === "true",
+    listingType: searchParams.get("listingType") ? searchParams.get("listingType")?.split(",") : [],
     location: searchParams.get("location") || "",
     search: searchParams.get("search") || "",
     sort: searchParams.get("sort") || "newest",
@@ -196,7 +196,7 @@ function DashboardContent() {
     } else {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      // Fetch crops based on url params OR default to user pinCode if no location/pinCode specified
+      // Fetch crops based on url params OR default to user pinCode if no location specified
       fetchCrops(parsedUser.pinCode);
     }
   }, [searchParams]); // Re-fetch when URL changes
@@ -206,10 +206,10 @@ function DashboardContent() {
     try {
       // Build API query string based on URL filters
       const params = new URLSearchParams(searchParams.toString());
-      if (!params.has("pinCode") && !params.has("location")) {
+      if (!params.has("location")) {
         // Only filter by pinCode if it's a valid 6-digit value
         if (defaultPin && defaultPin !== "undefined" && /^\d{6}$/.test(defaultPin)) {
-          params.set("pinCode", defaultPin);
+          params.set("location", defaultPin);
         }
       }
       
@@ -234,11 +234,7 @@ function DashboardContent() {
     const params = new URLSearchParams();
     
     if (newFilters.category?.length > 0) params.set("category", newFilters.category.join(","));
-    if (newFilters.minPrice) params.set("minPrice", newFilters.minPrice);
-    if (newFilters.maxPrice) params.set("maxPrice", newFilters.maxPrice);
-    if (newFilters.organic) params.set("organic", "true");
-    if (newFilters.verified) params.set("verified", "true");
-    if (newFilters.inStock) params.set("inStock", "true");
+    if (newFilters.listingType?.length > 0) params.set("listingType", newFilters.listingType.join(","));
     if (newFilters.location) params.set("location", newFilters.location);
     if (newFilters.search) params.set("search", newFilters.search);
     if (newFilters.sort && newFilters.sort !== "newest") params.set("sort", newFilters.sort);
@@ -254,8 +250,10 @@ function DashboardContent() {
     const newFilters = { ...currentFilters };
     if (key === "category" && value) {
       newFilters.category = (newFilters.category || []).filter((c: string) => c !== value);
+    } else if (key === "listingType" && value) {
+      newFilters.listingType = (newFilters.listingType || []).filter((t: string) => t !== value);
     } else {
-      (newFilters as any)[key] = typeof (newFilters as any)[key] === "boolean" ? false : "";
+      (newFilters as any)[key] = "";
     }
     applyFilters(newFilters);
   };

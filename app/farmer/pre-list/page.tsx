@@ -78,6 +78,7 @@ export default function PreListPage() {
           farmName: user.farmName,
           farmerMobile: user.mobileNumber,
           pinCode: user.pinCode,
+          location: typeof user.address === 'object' ? `${user.address.city}, ${user.address.state}` : user.address,
         }),
       });
 
