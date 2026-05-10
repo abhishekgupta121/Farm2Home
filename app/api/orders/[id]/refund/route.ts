@@ -10,7 +10,7 @@ export async function POST(
 ) {
   try {
     await dbConnect();
-    const orderId = params.id;
+    const { id: orderId } = await params;
 
     // 1. Fetch Order
     const order = await Order.findById(orderId);
