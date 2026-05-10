@@ -13,8 +13,8 @@ export interface IOrder extends mongoose.Document {
     farmerId: mongoose.Types.ObjectId;
   }[];
   totalAmount: number;
-  paymentStatus: "paid" | "pending";
-  orderStatus: "placed" | "shipped" | "delivered" | "cancelled";
+  paymentStatus: "paid" | "pending" | "transferred_to_farmer" | "refunded";
+  orderStatus: "placed" | "shipped" | "delivered" | "cancelled" | "confirmed";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,7 +39,7 @@ const OrderSchema = new mongoose.Schema<IOrder>(
     totalAmount: { type: Number, required: true },
     paymentStatus: { 
       type: String, 
-      enum: ["paid", "pending", "transferred_to_farmer"], 
+      enum: ["paid", "pending", "transferred_to_farmer", "refunded"], 
       default: "pending" 
     },
     orderStatus: { 
