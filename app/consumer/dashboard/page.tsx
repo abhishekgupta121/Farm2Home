@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LogOut, ShoppingCart, MapPin, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, X } from "lucide-react";
+import { LogOut, ShoppingCart, MapPin, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, X, RefreshCw, Clock, User as UserIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import axios from "axios";
@@ -134,6 +134,10 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
             <span className="text-slate-900 font-bold capitalize leading-tight">{formatAddress(crop.farmerId?.address, crop.pinCode, crop.location)}</span>
           </div>
           <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200">
+            <span className="text-slate-500 font-bold">Listed On</span>
+            <span className="text-slate-900 font-black">{new Date(crop.createdAt).toLocaleDateString()}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200">
             <span className="text-slate-500 font-bold">Availability</span>
             {crop.availableQuantityKg > 0 ? (
               <span className="text-green-600 font-black">{crop.availableQuantityKg} kg</span>
@@ -195,6 +199,7 @@ function DashboardContent() {
   const [orders, setOrders] = useState<any[]>([]);
   
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [showOrders, setShowOrders] = useState(false);
 
   // Parse filters from URL
   const currentFilters = {
@@ -215,9 +220,26 @@ function DashboardContent() {
       setUser(parsedUser);
       // Fetch crops based on url params OR default to user pinCode if no location specified
       fetchCrops(parsedUser.pinCode);
+      // Refresh wallet balance from DB
+      refreshWallet(parsedUser._id);
+      // Fetch order history
       fetchOrders(parsedUser._id);
     }
   }, [searchParams]); // Re-fetch when URL changes
+
+  const refreshWallet = async (userId: string) => {
+    try {
+      const res = await axios.get(`/api/user/wallet?userId=${userId}`);
+      const balance = res.data.walletBalance;
+      setUser((prev: any) => {
+        const updated = { ...prev, walletBalance: balance };
+        localStorage.setItem("user", JSON.stringify(updated));
+        return updated;
+      });
+    } catch (err) {
+      console.error("Failed to refresh wallet:", err);
+    }
+  };
 
   const fetchCrops = async (defaultPin: string) => {
     setLoading(true);
@@ -243,7 +265,7 @@ function DashboardContent() {
 
   const fetchOrders = async (userId: string) => {
     try {
-      const res = await fetch(`/api/orders?consumerId=${userId}`);
+      const res = await fetch(`/api/orders?consumerId=${userId}&t=${Date.now()}`);
       const data = await res.json();
       if (res.ok) {
         setOrders(data.orders);
@@ -352,9 +374,13 @@ function DashboardContent() {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Marketplace</h1>
-                <div className="flex items-center gap-1.5 text-slate-500 text-xs font-bold uppercase tracking-widest">
-                  <MapPin size={12} className="text-orange-500" />
-                  {user.pinCode} • Nearby You
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                    <MapPin size={12} className="text-orange-500" />
+                    {user.pinCode}
+                  </div>
+                  <div className="w-1 h-1 bg-slate-300 rounded-full"></div>
+                  <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{user.name}</span>
                 </div>
               </div>
             </div>
@@ -406,6 +432,24 @@ function DashboardContent() {
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+            <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl text-white shadow-lg shadow-indigo-500/20">
+              <div className="p-2 bg-white/20 rounded-xl">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">Digital Wallet</p>
+                <p className="text-sm font-black leading-none">₹{user.walletBalance || 0}</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowOrders(true)}
+              className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm active:scale-95"
+            >
+              <ShoppingBag size={18} className="text-orange-500" />
+              My Orders
+            </button>
+
             <Link href="/cart" className="relative p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-orange-50 hover:text-orange-600 transition-colors">
               <ShoppingBag size={22} />
               {totalItems > 0 && (
@@ -526,57 +570,161 @@ function DashboardContent() {
                     </button>
                   </div>
                 )}
-
-                {/* My Orders Section */}
-                <div className="mt-16 bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-                  <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                      <ShoppingBag className="text-orange-500" size={28} />
-                      My Orders
-                    </h2>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {orders.map((order) => (
-                      <div key={order._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-3xl bg-slate-50 border border-slate-100 gap-4 hover:border-orange-200 transition-all">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{order._id.substring(0, 8)}</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="text-sm font-bold text-slate-900">Farmer: {order.farmerId?.name || "Unknown Farmer"}</span>
-                          </div>
-                          <p className="text-slate-700 font-medium">{order.quantity}kg of <span className="font-bold text-slate-900">{order.listingId?.cropName || "Unknown Crop"}</span></p>
-                          <p className="text-xs text-slate-400 font-bold mt-1">Total: ₹{order.totalPrice}</p>
-                        </div>
-                        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                          <span className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
-                            order.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                            order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                            'bg-slate-200 text-slate-600'
-                          }`}>
-                            {order.status}
-                          </span>
-                          
-                          <button 
-                            onClick={() => handleRateFarmer(order)}
-                            className="px-4 py-2 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
-                          >
-                            Rate
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {orders.length === 0 && (
-                      <p className="text-slate-500 font-medium text-center py-4">No orders placed yet.</p>
-                    )}
-                  </div>
-                </div>
-
               </>
             )}
+
           </div>
         </div>
       </main>
+
+      {/* My Orders Modal */}
+      {showOrders && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/40 backdrop-blur-sm p-4 sm:p-8 flex items-center justify-center">
+          <div className="bg-slate-50 w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col border border-white animate-in zoom-in duration-300">
+            {/* Modal Header */}
+            <div className="bg-white px-8 py-6 border-b border-slate-200 flex justify-between items-center sticky top-0 z-10">
+              <div>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                  <ShoppingBag className="text-orange-500" size={32} />
+                  My Order History
+                </h2>
+                <p className="text-slate-500 font-bold">Track and manage your recent purchases</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => user && fetchOrders(user._id)}
+                  className="p-3 bg-slate-50 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-2xl transition-all"
+                  title="Refresh Orders"
+                >
+                  <RefreshCw size={20} />
+                </button>
+                <button 
+                  onClick={() => setShowOrders(false)}
+                  className="p-3 bg-slate-900 text-white hover:bg-orange-600 rounded-2xl transition-all shadow-lg active:scale-95"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-6">
+              {orders.length === 0 ? (
+                <div className="text-center py-20 bg-white rounded-[2rem] border border-dashed border-slate-200">
+                  <ShoppingBag className="mx-auto text-slate-200 mb-6" size={80} />
+                  <h3 className="text-2xl font-black text-slate-900 mb-2">No orders found</h3>
+                  <p className="text-slate-500 font-bold max-w-xs mx-auto">Start shopping to see your fresh produce history here!</p>
+                </div>
+              ) : (
+                orders.map((order) => (
+                  <div key={order._id} className="p-8 rounded-[2.5rem] bg-white border border-slate-200 shadow-sm hover:border-orange-200 hover:shadow-xl transition-all group overflow-hidden relative">
+                    <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100 group-hover:bg-orange-500 transition-colors"></div>
+                    
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black tracking-widest uppercase">
+                            ORDER #{order._id.slice(-8).toUpperCase()}
+                          </span>
+                          <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
+                            order.orderStatus === 'placed' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                            order.orderStatus === 'delivered' ? 'bg-green-50 text-green-600 border-green-100' :
+                            order.orderStatus === 'cancelled' ? 'bg-red-50 text-red-600 border-red-100' :
+                            'bg-slate-100 text-slate-600 border-slate-200'
+                          }`}>
+                            {order.orderStatus}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
+                          <Clock size={14} />
+                          {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                      
+                      <div className="text-left lg:text-right">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Payment</p>
+                        <p className="text-3xl font-black text-slate-900 tracking-tighter">₹{order.totalAmount}</p>
+                        <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${order.paymentStatus === 'paid' ? 'text-amber-500' : 'text-green-600'}`}>
+                          {order.paymentStatus === 'paid' ? '● Held in Escrow' : '● Released to Farmer'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {order.items.map((item: any, idx: number) => (
+                        <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 bg-slate-50 border border-slate-100 rounded-3xl gap-4">
+                          <div className="flex items-center gap-5">
+                            <div className="w-14 h-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center font-black text-orange-600 shadow-sm">
+                              {item.quantity}kg
+                            </div>
+                            <div>
+                              <p className="font-black text-slate-900 text-base">{item.cropName}</p>
+                              <p className="text-xs font-bold text-slate-500">₹{item.pricePerKg}/kg • Subtotal: ₹{item.total}</p>
+                            </div>
+                          </div>
+                          <div className="sm:text-right flex items-center gap-4 border-l-2 border-slate-200 pl-6 h-full">
+                            <div>
+                              <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Farmer & Farm House</p>
+                              <p className="text-sm font-black text-slate-900">{item.farmerId?.farmName || item.farmerId?.name || "Premium Farm"}</p>
+                              <p className="text-[10px] font-bold text-slate-500">Contact: {item.farmerId?.mobileNumber || "N/A"}</p>
+                            </div>
+                            <UserIcon className="text-slate-200 hidden sm:block" size={24} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-8 flex gap-4">
+                      {order.orderStatus === 'placed' && (
+                        <button 
+                          onClick={async () => {
+                            if (confirm("Are you sure you want to cancel this order and get a refund?")) {
+                              try {
+                                const res = await fetch(`/api/orders/${order._id}/refund`, { method: "POST" });
+                                const data = await res.json();
+                                if (res.ok) {
+                                  toast.success("Refund processed successfully!");
+                                  fetchOrders(user._id);
+                                  refreshWallet(user._id);
+                                } else {
+                                  toast.error(data.error);
+                                }
+                              } catch (err) {
+                                toast.error("Refund failed");
+                              }
+                            }
+                          }}
+                          className="flex-1 py-4 bg-red-50 text-red-600 hover:bg-red-100 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95"
+                        >
+                          Cancel & Refund
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleRateFarmer(order)}
+                        disabled={order.orderStatus !== 'delivered'}
+                        className="flex-1 py-4 bg-slate-900 text-white hover:bg-orange-600 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        Rate Farmer
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="bg-white px-8 py-6 border-t border-slate-200 flex justify-between items-center">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Showing {orders.length} transactions</p>
+              <button 
+                onClick={() => setShowOrders(false)}
+                className="px-8 py-3 bg-slate-100 text-slate-600 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all"
+              >
+                Close History
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,6 +19,7 @@ import {
   PhoneCall,
   ChevronDown,
   Wallet,
+  DollarSign,
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 
@@ -52,7 +53,7 @@ export default function FarmerNavbar() {
     if (userData) {
       try {
         setUser(JSON.parse(userData));
-      } catch {}
+      } catch { }
     }
   }, []);
 
@@ -88,11 +89,10 @@ export default function FarmerNavbar() {
 
       <div className="fixed top-5 left-0 w-full z-50 px-4 md:px-8 lg:px-16 pointer-events-none">
         <nav
-          className={`mx-auto max-w-[1400px] flex items-center justify-between px-6 md:px-10 py-4 rounded-[2rem] pointer-events-auto transition-all duration-500 ${
-            scrolled
+          className={`mx-auto max-w-[1400px] flex items-center justify-between px-6 md:px-10 py-4 rounded-[2rem] pointer-events-auto transition-all duration-500 ${scrolled
               ? "shadow-[0_20px_60px_rgba(0,40,20,0.5)] border border-white/10"
               : "shadow-[0_10px_40px_rgba(0,40,20,0.3)] border border-white/10"
-          } glass-rolex`}
+            } glass-rolex`}
         >
           {/* Logo */}
           <Link href="/farmer" className="flex items-center gap-3 group shrink-0">
@@ -115,17 +115,15 @@ export default function FarmerNavbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-bold transition-all relative group py-1 ${
-                  isActive(link.href)
+                className={`text-sm font-bold transition-all relative group py-1 ${isActive(link.href)
                     ? "text-amber-400"
                     : "text-emerald-50/70 hover:text-white"
-                }`}
+                  }`}
               >
                 {link.name}
                 <span
-                  className={`absolute bottom-0 left-0 h-0.5 bg-amber-400 transition-all duration-300 ${
-                    isActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
-                  }`}
+                  className={`absolute bottom-0 left-0 h-0.5 bg-amber-400 transition-all duration-300 ${isActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
                 />
               </Link>
             ))}
@@ -142,9 +140,8 @@ export default function FarmerNavbar() {
                 Farmer Tools
                 <ChevronDown
                   size={14}
-                  className={`text-emerald-300 transition-transform duration-300 ${
-                    farmerMenuOpen ? "rotate-180" : ""
-                  }`}
+                  className={`text-emerald-300 transition-transform duration-300 ${farmerMenuOpen ? "rotate-180" : ""
+                    }`}
                 />
               </button>
 
@@ -157,11 +154,10 @@ export default function FarmerNavbar() {
                         key={link.href}
                         href={link.href}
                         onClick={() => setFarmerMenuOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-all ${
-                          isActive(link.href)
+                        className={`flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-all ${isActive(link.href)
                             ? "bg-emerald-700/60 text-amber-400"
                             : "text-emerald-100/80 hover:bg-white/10 hover:text-white"
-                        }`}
+                          }`}
                       >
                         <Icon size={16} className="opacity-70" />
                         {link.name}
@@ -181,21 +177,31 @@ export default function FarmerNavbar() {
                 <button
                   key={lang}
                   onClick={() => setLanguage(lang)}
-                  className={`px-3 py-1.5 text-xs font-black rounded-lg transition-all duration-300 ${
-                    language === lang
+                  className={`px-3 py-1.5 text-xs font-black rounded-lg transition-all duration-300 ${language === lang
                       ? "bg-white text-emerald-900 shadow-md"
                       : "text-emerald-100/50 hover:text-white hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   {lang === "en" ? "EN" : "हिं"}
                 </button>
               ))}
             </div>
 
-            {/* User & Logout */}
+            {/* Wallet & User Logout */}
             <div className="flex items-center gap-3 pl-3 border-l border-white/10">
+              {/* Farmer Wallet */}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-700/40 border border-emerald-500/30 rounded-xl">
+                <div className="w-6 h-6 bg-amber-400 rounded-lg flex items-center justify-center text-emerald-900">
+                  <DollarSign size={14} strokeWidth={3} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black uppercase tracking-tighter text-emerald-300 leading-none">Earnings</span>
+                  <span className="text-xs font-black text-white leading-none">₹{user?.walletBalance || 0}</span>
+                </div>
+              </div>
+
               {user && (
-                <span className="text-xs font-bold text-emerald-300 max-w-[100px] truncate">
+                <span className="text-xs font-bold text-emerald-300 max-w-[80px] truncate">
                   {user.name}
                 </span>
               )}
@@ -234,11 +240,10 @@ export default function FarmerNavbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                      isActive(link.href)
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${isActive(link.href)
                         ? "bg-emerald-700/50 text-amber-400"
                         : "text-emerald-100/70 hover:bg-white/10 hover:text-white"
-                    }`}
+                      }`}
                   >
                     <Icon size={16} />
                     {link.name}
@@ -259,11 +264,10 @@ export default function FarmerNavbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                      isActive(link.href)
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${isActive(link.href)
                         ? "bg-emerald-700/50 text-amber-400"
                         : "text-emerald-100/70 hover:bg-white/10 hover:text-white"
-                    }`}
+                      }`}
                   >
                     <Icon size={16} />
                     {link.name}
@@ -279,11 +283,10 @@ export default function FarmerNavbar() {
                   <button
                     key={lang}
                     onClick={() => setLanguage(lang)}
-                    className={`px-3 py-1.5 text-xs font-black rounded-lg transition-all duration-300 ${
-                      language === lang
+                    className={`px-3 py-1.5 text-xs font-black rounded-lg transition-all duration-300 ${language === lang
                         ? "bg-white text-emerald-900 shadow-md"
                         : "text-emerald-100/50 hover:text-white"
-                    }`}
+                      }`}
                   >
                     {lang === "en" ? "EN" : "हिं"}
                   </button>

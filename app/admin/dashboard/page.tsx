@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, ShieldCheck, CheckCircle, XCircle, Clock, Search, Filter, ShoppingBag, Leaf, Tractor, Tag } from "lucide-react";
+import { LogOut, ShieldCheck, CheckCircle, XCircle, Clock, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, X } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
@@ -10,7 +10,9 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [pendingCrops, setPendingCrops] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"crops" | "orders">("crops");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -23,10 +25,36 @@ export default function AdminDashboard() {
         router.push("/");
       } else {
         setUser(parsedUser);
-        fetchPendingCrops();
+        fetchData(parsedUser._id);
       }
     }
   }, [router]);
+
+  const fetchData = async (userId: string) => {
+    setLoading(true);
+    await Promise.all([
+      fetchPendingCrops(),
+      fetchOrders(),
+      refreshWallet(userId)
+    ]);
+    setLoading(false);
+  };
+
+  const refreshWallet = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/user/wallet?userId=${userId}`);
+      const data = await res.json();
+      if (res.ok) {
+        setUser((prev: any) => {
+          const updated = { ...prev, walletBalance: data.walletBalance };
+          localStorage.setItem("user", JSON.stringify(updated));
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error("Wallet refresh failed", err);
+    }
+  };
 
   const fetchPendingCrops = async () => {
     try {
@@ -37,9 +65,18 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error("Failed to fetch pending crops:", err);
-      toast.error("Failed to load pending crops");
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(`/api/orders?admin=true`);
+      const data = await res.json();
+      if (res.ok) {
+        setOrders(data.orders);
+      }
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
     }
   };
 
@@ -53,11 +90,45 @@ export default function AdminDashboard() {
       if (res.ok) {
         setPendingCrops(prev => prev.filter(crop => crop._id !== id));
         toast.success(`Crop ${status === 'active' ? 'approved' : 'rejected'} successfully!`);
-      } else {
-        toast.error("Failed to update status");
       }
     } catch (err) {
-      console.error("Failed to update status", err);
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleReleasePayment = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/release-payment`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Payment released to farmers!");
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, paymentStatus: "transferred_to_farmer", orderStatus: "delivered" } : o));
+        if (user) refreshWallet(user._id);
+      } else {
+        toast.error(data.error || "Failed to release payment");
+      }
+    } catch (err) {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleRefund = async (orderId: string) => {
+    if (!confirm("Are you sure you want to refund this order to the consumer? This will return funds and cancel the order.")) return;
+    try {
+      const res = await fetch(`/api/orders/${orderId}/refund`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Order refunded and cancelled!");
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, paymentStatus: "refunded", orderStatus: "cancelled" } : o));
+        if (user) refreshWallet(user._id);
+      } else {
+        toast.error(data.error || "Failed to refund order");
+      }
+    } catch (err) {
       toast.error("Something went wrong");
     }
   };
@@ -67,8 +138,20 @@ export default function AdminDashboard() {
     router.push("/");
   };
 
+  const formatAddress = (addr: any) => {
+    if (!addr) return "N/A";
+    if (typeof addr === 'string') return addr;
+    const parts = [addr.addressLine1, addr.city, addr.state].filter(Boolean);
+    return parts.length > 0 ? parts.join(", ") : "N/A";
+  };
+
   const filteredCrops = pendingCrops.filter(crop => 
     crop.farmerName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredOrders = orders.filter(order => 
+    order._id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    order.consumerId?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (!user || loading) return (
@@ -78,7 +161,7 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-slate-50 selection:bg-blue-100 selection:text-blue-900 pb-20">
       {/* Admin Navbar */}
       <nav className="bg-slate-900 text-white px-4 sm:px-8 py-4 sticky top-0 z-50 shadow-lg shadow-slate-900/10">
         <div className="max-w-[1400px] mx-auto flex justify-between items-center">
@@ -88,14 +171,24 @@ export default function AdminDashboard() {
             </div>
             <div>
               <span className="text-lg font-black tracking-tight block">Admin Console</span>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Farm2Home</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Farm2Home Escrow</span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-bold text-slate-300 hidden sm:block">Hello, {user.name}</span>
+          
+          <div className="flex items-center gap-6">
+            <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl text-white border border-blue-400/30">
+              <div className="p-2 bg-white/20 rounded-xl">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">Escrow Wallet</p>
+                <p className="text-sm font-black leading-none">₹{user.walletBalance || 0}</p>
+              </div>
+            </div>
+
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 font-bold rounded-xl transition-all active:scale-95 text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-red-500 hover:text-white font-bold rounded-xl transition-all active:scale-95 text-sm"
             >
               <LogOut size={16} />
               Logout
@@ -105,124 +198,210 @@ export default function AdminDashboard() {
       </nav>
 
       <div className="p-4 sm:p-8 max-w-[1400px] mx-auto space-y-8">
-        {/* Header & Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Pending Approvals</h1>
-              <p className="text-slate-500 font-medium mt-1">Review and verify new crop listings submitted by farmers.</p>
-            </div>
-            <div className="bg-amber-50 border border-amber-100 px-6 py-4 rounded-2xl text-amber-600 flex items-center gap-3 shrink-0">
-              <Clock size={24} className="animate-pulse" />
-              <div>
-                <span className="text-2xl font-black block leading-none">{pendingCrops.length}</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-amber-500">To Review</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] shadow-lg shadow-blue-600/20 p-8 text-white flex flex-col justify-between">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-bold uppercase tracking-widest text-blue-200">System Status</span>
-              <span className="w-2.5 h-2.5 bg-green-400 rounded-full animate-ping"></span>
-            </div>
-            <div>
-              <h3 className="text-2xl font-black mb-1">All Systems Live</h3>
-              <p className="text-blue-100 text-sm font-medium">Auto-inventory & orders are synced.</p>
-            </div>
-          </div>
+        <div className="flex p-1.5 bg-slate-200 w-fit rounded-[1.5rem] shadow-inner">
+          <button 
+            onClick={() => setActiveTab("crops")}
+            className={`px-8 py-3 rounded-[1.2rem] font-black text-sm tracking-widest transition-all ${activeTab === 'crops' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            PENDING CROPS ({pendingCrops.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab("orders")}
+            className={`px-8 py-3 rounded-[1.2rem] font-black text-sm tracking-widest transition-all ${activeTab === 'orders' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            ORDER MANAGEMENT ({orders.length})
+          </button>
         </div>
 
-        {/* Search & Filter Bar */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full sm:w-96">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+          <div className="relative w-full">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search by crop or farmer name..." 
+              placeholder={activeTab === "crops" ? "Search crops or farmers..." : "Search Order ID or Consumer..."} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm"
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:border-blue-500 transition-all"
             />
-          </div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 font-bold">
-            <Filter size={16} />
-            <span>Showing {filteredCrops.length} of {pendingCrops.length} items</span>
           </div>
         </div>
 
-        {/* Crops Grid */}
-        {filteredCrops.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-[2.5rem] border border-dashed border-slate-300 shadow-sm">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShieldCheck size={40} className="text-slate-300" />
-            </div>
-            <h3 className="text-2xl font-black text-slate-900 mb-2">No pending listings</h3>
-            <p className="text-slate-500 font-medium max-w-md mx-auto">Either all crops are reviewed or try searching for something else.</p>
-          </div>
-        ) : (
+        {activeTab === "crops" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredCrops.map((crop) => (
               <div key={crop._id} className="group bg-white rounded-[2rem] p-6 shadow-sm border border-slate-200 flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                 <div className="flex items-start gap-4 mb-6">
                   <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden shrink-0 relative border border-slate-100">
                     {crop.imageUrl ? (
-                      <img src={crop.imageUrl} alt={crop.cropName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img src={crop.imageUrl} alt={crop.cropName} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-300 bg-gradient-to-br from-slate-50 to-slate-100">
-                        {crop.category === 'vegetable' ? <Leaf size={24} /> : 
-                         crop.listingType === 'ugly-sell' ? <Tag size={24} /> : <Tractor size={24} />}
+                      <div className="w-full h-full flex items-center justify-center text-slate-300">
+                        <Leaf size={24} />
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-black text-slate-900 truncate tracking-tight">{crop.cropName}</h3>
-                    <p className="text-sm font-bold text-slate-500 truncate">Farmer: {crop.farmerName}</p>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${
-                        crop.listingType === 'ugly-sell' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                        crop.listingType === 'pre-list' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                        'bg-green-50 text-green-700 border-green-100'
-                      }`}>
-                        {crop.listingType}
-                      </span>
-                      {crop.isOrganic && (
-                        <span className="px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-green-100 text-green-700 border border-green-200">
-                          Organic
-                        </span>
-                      )}
-                    </div>
+                    <h3 className="text-lg font-black text-slate-900 truncate">{crop.cropName}</h3>
+                    <p className="text-sm font-bold text-slate-500">Farmer: {crop.farmerName}</p>
+                    <span className="inline-block mt-2 px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-[10px] font-black uppercase tracking-widest border border-blue-100">
+                      {crop.listingType}
+                    </span>
                   </div>
                 </div>
-
                 <div className="bg-slate-50 rounded-2xl p-4 mb-6 space-y-2 text-sm font-medium">
                   <div className="flex justify-between">
-                    <span className="text-slate-500 font-bold">Price</span>
+                    <span className="text-slate-500">Price</span>
                     <span className="text-slate-900 font-black">₹{crop.pricePerKg}/kg</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500 font-bold">Quantity</span>
+                    <span className="text-slate-500">Stock</span>
                     <span className="text-slate-900 font-black">{crop.availableQuantityKg} kg</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 font-bold">Location</span>
-                    <span className="text-slate-900 font-black truncate max-w-[150px]">{crop.location || crop.pinCode}</span>
-                  </div>
                 </div>
-
                 <div className="mt-auto flex gap-3">
-                  <button 
-                    onClick={() => handleStatusUpdate(crop._id, "active")}
-                    className="flex-1 flex justify-center items-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 active:scale-95 text-sm"
-                  >
-                    <CheckCircle size={16} /> Approve
+                  <button onClick={() => handleStatusUpdate(crop._id, "active")} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 text-sm">
+                    Approve
                   </button>
-                  <button 
-                    onClick={() => handleStatusUpdate(crop._id, "rejected")}
-                    className="flex-1 flex justify-center items-center gap-2 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold transition-all active:scale-95 text-sm"
-                  >
-                    <XCircle size={16} /> Reject
+                  <button onClick={() => handleStatusUpdate(crop._id, "rejected")} className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 text-sm">
+                    Reject
                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Delivery Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending Delivery</p>
+                <h3 className="text-2xl font-black text-slate-900">{orders.filter(o => o.orderStatus === 'placed').length} Orders</h3>
+              </div>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Completed / Paid</p>
+                <h3 className="text-2xl font-black text-green-600">{orders.filter(o => o.paymentStatus === 'transferred_to_farmer').length} Orders</h3>
+              </div>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Refunded / Cancelled</p>
+                <h3 className="text-2xl font-black text-red-500">{orders.filter(o => o.orderStatus === 'cancelled').length} Orders</h3>
+              </div>
+            </div>
+
+            {filteredOrders.map((order) => (
+              <div key={order._id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 hover:border-blue-400 transition-all overflow-hidden relative group">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-200 group-hover:bg-blue-500 transition-colors"></div>
+                
+                <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
+                  <div className="flex-1 space-y-6">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span className="px-4 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest">
+                        ORDER #{order._id.slice(-8).toUpperCase()}
+                      </span>
+                      <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest border ${
+                        order.paymentStatus === 'paid' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-green-50 text-green-600 border-green-200'
+                      }`}>
+                        {order.paymentStatus === 'paid' ? 'HOLDING IN ESCROW' : 'TRANSFERRED TO FARMER'}
+                      </span>
+                      <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
+                        <Clock size={14} />
+                        {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Consumer Details</p>
+                        <h4 className="text-lg font-black text-slate-900 mb-1">{order.consumerId?.name}</h4>
+                        <p className="text-sm font-bold text-slate-600 mb-2">{order.consumerId?.mobileNumber}</p>
+                        <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                          {formatAddress(order.consumerId?.address)} <br/>
+                          <span className="font-black text-slate-400">PIN: {order.consumerId?.pinCode}</span>
+                        </p>
+                      </div>
+
+                      <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100/50">
+                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">Order Summary</p>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-slate-600">Total Items</span>
+                            <span className="text-sm font-black text-slate-900">{order.items.length} Varieties</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-slate-600">Total Weight</span>
+                            <span className="text-sm font-black text-slate-900">{order.items.reduce((acc: number, item: any) => acc + item.quantity, 0)} kg</span>
+                          </div>
+                          <div className="pt-2 border-t border-blue-100 flex justify-between items-center mt-2">
+                            <span className="text-sm font-black text-blue-700">Total Payout</span>
+                            <span className="text-2xl font-black text-blue-900">₹{order.totalAmount}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Itemized Breakdown & Farmer Info</p>
+                      <div className="space-y-3">
+                        {order.items.map((item: any, idx: number) => (
+                          <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border border-slate-100 rounded-2xl gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-black text-xs">
+                                {item.quantity}kg
+                              </div>
+                              <div>
+                                <p className="font-black text-slate-900 text-sm">{item.cropName}</p>
+                                <p className="text-[10px] font-bold text-slate-500">₹{item.pricePerKg}/kg • Total: ₹{item.total}</p>
+                              </div>
+                            </div>
+                            <div className="text-left sm:text-right border-l sm:border-l-0 sm:border-r border-slate-100 pl-4 sm:pl-0 sm:pr-4">
+                              <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Farmer</p>
+                              <p className="text-xs font-black text-slate-900">{item.farmerId?.name || "N/A"}</p>
+                              <p className="text-[10px] font-medium text-slate-500">{formatAddress(item.farmerId?.address)}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="w-full lg:w-64 shrink-0 space-y-4">
+                    {order.paymentStatus === "paid" ? (
+                      <div className="bg-amber-50 rounded-3xl p-6 border border-amber-100 text-center">
+                        <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <ShoppingBag size={24} />
+                        </div>
+                        <h5 className="font-black text-slate-900 mb-2">Pending Release</h5>
+                        <p className="text-xs font-medium text-slate-500 mb-6">Funds are held in escrow. Verify order delivery before releasing.</p>
+                        <button 
+                          onClick={() => handleReleasePayment(order._id)}
+                          className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/30 active:scale-95"
+                        >
+                          Release ₹{order.totalAmount}
+                        </button>
+                        <button 
+                          onClick={() => handleRefund(order._id)}
+                          className="w-full mt-3 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95"
+                        >
+                          Refund & Cancel
+                        </button>
+                      </div>
+                    ) : order.paymentStatus === "refunded" ? (
+                      <div className="bg-red-50 rounded-3xl p-6 border border-red-100 text-center">
+                        <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <X size={24} />
+                        </div>
+                        <h5 className="font-black text-red-800 mb-1">Order Refunded</h5>
+                        <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Amount Returned</p>
+                      </div>
+                    ) : (
+                      <div className="bg-green-50 rounded-3xl p-6 border border-green-100 text-center">
+                        <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <CheckCircle size={24} />
+                        </div>
+                        <h5 className="font-black text-green-800 mb-1">Payment Released</h5>
+                        <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Transaction Complete</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

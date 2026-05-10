@@ -1,7 +1,10 @@
+// UNIQUE_ID: CLEAN_FILE_v2
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/lib/models/Order";
 import Crop from "@/lib/models/Crop";
+import User from "@/lib/models/User";
+import Cart from "@/lib/models/Cart";
 import mongoose from "mongoose";
 
 const MOCK_CONSUMER_ID = "000000000000000000000001";
@@ -13,6 +16,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const farmerId = searchParams.get("farmerId");
     const consumerId = searchParams.get("consumerId");
+    const isAdmin = searchParams.get("admin") === "true";
 
     let filter = {};
     let queryConsumerId = consumerId;
@@ -20,18 +24,20 @@ export async function GET(req: Request) {
       queryConsumerId = MOCK_CONSUMER_ID;
     }
 
-    if (farmerId && mongoose.Types.ObjectId.isValid(farmerId)) {
-      filter = { farmerId };
+    if (isAdmin) {
+      filter = {}; // Admin sees all
+    } else if (farmerId && mongoose.Types.ObjectId.isValid(farmerId)) {
+      filter = { "items.farmerId": new mongoose.Types.ObjectId(farmerId) };
     } else if (queryConsumerId && mongoose.Types.ObjectId.isValid(queryConsumerId)) {
-      filter = { consumerId: queryConsumerId };
+      filter = { consumerId: new mongoose.Types.ObjectId(queryConsumerId) };
     } else {
-      return NextResponse.json({ error: "Valid Farmer ID or Consumer ID is required" }, { status: 400 });
+      return NextResponse.json({ error: "Valid ID is required" }, { status: 400 });
     }
 
     const orders = await Order.find(filter)
-      .populate("listingId", "cropName pricePerKg")
-      .populate("consumerId", "name")
-      .populate("farmerId", "name")
+      .populate("items.productId", "cropName pricePerKg")
+      .populate("items.farmerId", "name farmName address mobileNumber")
+      .populate("consumerId", "name address mobileNumber pinCode")
       .sort({ createdAt: -1 });
 
     return NextResponse.json({ orders }, { status: 200 });
@@ -48,53 +54,79 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
     const body = await req.json();
-    const { listingId, consumerId, farmerId, quantity, totalPrice } = body;
+    const { userId, items, totalAmount } = body;
 
-    let validConsumerId = consumerId;
-    if (consumerId === "admin-mock-id") {
-      validConsumerId = MOCK_CONSUMER_ID;
-    } else if (!mongoose.Types.ObjectId.isValid(consumerId)) {
-      validConsumerId = new mongoose.Types.ObjectId();
+    if (!userId || !items || items.length === 0) {
+      return NextResponse.json({ error: "Invalid order data" }, { status: 400 });
     }
 
-    let validFarmerId = farmerId;
-    if (!mongoose.Types.ObjectId.isValid(farmerId)) {
-      validFarmerId = new mongoose.Types.ObjectId();
+    // 1. Fetch User and Check Balance
+    const user = await User.findById(userId);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (!listingId || !consumerId || !farmerId || !quantity || !totalPrice) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (user.walletBalance < totalAmount) {
+      return NextResponse.json({ error: "Insufficient wallet balance" }, { status: 400 });
     }
 
-    // 1. Check stock
-    const crop = await Crop.findById(listingId);
-    if (!crop) {
-      return NextResponse.json({ error: "Crop listing not found" }, { status: 404 });
+    // 2. Find or Auto-Create Admin for Escrow
+    let admin = await User.findOne({ role: "admin" });
+    if (!admin) {
+      // Create a default admin if none exists to prevent system failure
+      admin = await User.create({
+        name: "Super Admin",
+        mobileNumber: "0000000000",
+        password: "password_placeholder", // Will be hashed if logged in properly
+        role: "admin",
+        aadhaarNumber: "000000000000",
+        pinCode: "000000",
+        address: "System HQ",
+        walletBalance: 0,
+      });
     }
 
-    if (crop.availableQuantityKg < quantity) {
-      return NextResponse.json({ error: "Insufficient stock" }, { status: 400 });
-    }
-
-    // 2. Create order
-    const order = await Order.create({
-      listingId,
-      consumerId: validConsumerId,
-      farmerId: validFarmerId,
-      quantity,
-      totalPrice,
-      status: "confirmed"
+    // 3. Create the Order
+    const newOrder = await Order.create({
+      consumerId: userId,
+      items: items.map((item: any) => ({
+        productId: item.productId._id,
+        cropName: item.productId.cropName,
+        quantity: item.quantity,
+        pricePerKg: item.productId.pricePerKg,
+        total: item.productId.pricePerKg * item.quantity,
+        farmerId: item.productId.farmerId,
+      })),
+      totalAmount,
+      paymentStatus: "paid", // Paid to admin (escrow)
+      orderStatus: "placed",
     });
 
-    // 3. Reduce stock
-    crop.availableQuantityKg -= quantity;
-    await crop.save();
+    // 4. Deduct Consumer Wallet & Add to Admin Wallet (Escrow)
+    user.walletBalance -= totalAmount;
+    await user.save();
 
-    return NextResponse.json({ message: "Order placed successfully", order }, { status: 201 });
+    admin.walletBalance += totalAmount;
+    await admin.save();
+
+    // 5. Update Crop Quantities (Deduct stock)
+    for (const item of items) {
+        await Crop.findByIdAndUpdate(item.productId._id, {
+            $inc: { availableQuantityKg: -item.quantity }
+        });
+    }
+
+    // 6. Clear User's Cart
+    await Cart.findOneAndUpdate({ userId }, { items: [] });
+
+    return NextResponse.json({ 
+      message: "Order placed successfully. Funds held in escrow.", 
+      order: newOrder,
+      newBalance: user.walletBalance 
+    }, { status: 201 });
+
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || "Failed to place order" },
-      { status: 500 }
-    );
+    console.error("Order creation error:", error);
+    return NextResponse.json({ error: error.message || "Failed to place order" }, { status: 500 });
   }
 }

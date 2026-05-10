@@ -67,6 +67,7 @@ export async function POST(req: Request) {
       role: newUser.role,
       pinCode: newUser.pinCode,
       farmName: newUser.farmName,
+      walletBalance: newUser.walletBalance,
     };
 
     return NextResponse.json(

@@ -14,6 +14,7 @@ export interface IUser extends mongoose.Document {
   password: string;
   role: "farmer" | "consumer" | "admin";
   farmName?: string; // Optional, only for farmers
+  walletBalance: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,6 +57,10 @@ const UserSchema = new mongoose.Schema<IUser>(
     farmName: {
       type: String,
       required: false,
+    },
+    walletBalance: {
+      type: Number,
+      default: 50000, 
     },
   },
   {
