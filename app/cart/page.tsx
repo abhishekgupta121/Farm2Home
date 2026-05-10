@@ -137,45 +137,6 @@ export default function CartPage() {
   };
 
   const handleCheckout = async () => {
-<<<<<<< HEAD
-    const userData = localStorage.getItem("user");
-    if (!userData) {
-      toast.error("Please login to checkout");
-      return;
-    }
-    const user = JSON.parse(userData);
-
-    if (!cart) {
-      toast.error("Cart is empty");
-      return;
-    }
-
-    try {
-      for (const item of cart.items) {
-        const res = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            listingId: item.productId?._id,
-            consumerId: user._id,
-            farmerId: item.productId?.farmerId?._id || item.productId?.farmerId,
-            quantity: item.quantity,
-            totalPrice: item.productId?.pricePerKg * item.quantity,
-          }),
-        });
-
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || "Failed to place order");
-        }
-      }
-
-      toast.success("Order placed successfully!");
-      clearCart();
-      router.push("/consumer/dashboard");
-    } catch (error: any) {
-      toast.error(error.message);
-=======
     if (!user || !cart) return;
     if (user.walletBalance < totalPrice) {
       toast.error("Insufficient wallet balance!");
@@ -205,11 +166,11 @@ export default function CartPage() {
       setUser(updatedUser);
 
       setOrderResult(data.order);
+      clearCart();
     } catch (err: any) {
       toast.error(err.message);
     } finally {
       setIsProcessing(false);
->>>>>>> 2f64611 (Implemented Digital Wallet with ₹50,000 initial balance, Order processing API, and detailed Order Summary view)
     }
   };
 
@@ -227,7 +188,6 @@ export default function CartPage() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-[3rem] shadow-2xl border border-slate-100 p-8 sm:p-12 max-w-2xl w-full text-center relative overflow-hidden">
-          {/* Confetti-like background */}
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500"></div>
           
           <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce">
@@ -308,7 +268,6 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {cart.items.map((item: any) => (
                 <CartItemCard 
@@ -321,7 +280,6 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-slate-100 sticky top-24">
                 <h3 className="text-xl font-black text-slate-900 mb-6">Order Summary</h3>
@@ -344,14 +302,6 @@ export default function CartPage() {
                   </div>
                 </div>
 
-<<<<<<< HEAD
-                <button 
-                  onClick={handleCheckout}
-                  className="w-full py-4 bg-orange-500 text-white rounded-2xl font-black text-lg uppercase tracking-widest hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/30 active:scale-95"
-                >
-                  Proceed to Checkout
-=======
-                {/* Wallet Info */}
                 <div className="bg-indigo-50 rounded-2xl p-4 mb-8 border border-indigo-100">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs font-black text-indigo-400 uppercase tracking-widest">Digital Wallet</span>
@@ -372,7 +322,6 @@ export default function CartPage() {
                   className="w-full py-4 bg-orange-500 text-white rounded-2xl font-black text-lg uppercase tracking-widest hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isProcessing ? "Processing..." : "Confirm & Pay"}
->>>>>>> 2f64611 (Implemented Digital Wallet with ₹50,000 initial balance, Order processing API, and detailed Order Summary view)
                 </button>
                 <div className="mt-4 flex items-center justify-center gap-2 text-slate-400">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>

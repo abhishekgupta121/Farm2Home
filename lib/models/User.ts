@@ -14,6 +14,7 @@ export interface IUser extends mongoose.Document {
   password: string;
   role: "farmer" | "consumer" | "admin";
   farmName?: string; // Optional, only for farmers
+  walletBalance: number;
   createdAt: Date;
   updatedAt: Date;
 }
