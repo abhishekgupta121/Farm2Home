@@ -11,6 +11,7 @@ import FilterSidebar from "@/app/components/FilterSidebar";
 import FilterDrawer from "@/app/components/FilterDrawer";
 import FilterChips from "@/app/components/FilterChips";
 import ProductSkeleton from "@/app/components/ProductSkeleton";
+import toast from "react-hot-toast";
 
 const formatAddress = (addr: any, fallback: string) => {
   if (!addr) return fallback;
@@ -23,6 +24,13 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
   const minQty = Math.min(["vegetable", "fruit"].includes(crop.category) ? 5 : 20, crop.availableQuantityKg);
   const [quantity, setQuantity] = useState<number | string>(minQty);
   const [added, setAdded] = useState(false);
+
+  const pulseImages: { [key: string]: string } = {
+    moong: "https://5.imimg.com/data5/SELLER/Default/2025/9/543231555/LO/GS/HR/45333637/30kg-moong-daal-1000x1000.jpeg",
+    masoor: "https://5.imimg.com/data5/SELLER/Default/2023/3/294545924/WG/XA/HG/40169047/malka-masoor-dal-1000x1000.jpg",
+    toor: "https://5.imimg.com/data5/SELLER/Default/2022/7/CH/AJ/EW/124695288/yellow-thur-dhall-500x500.png",
+    default: "https://goqii.com/blog/wp-content/uploads/Why-Pulses-Are-Good-For-You-1024x683.jpg"
+  };
 
   const handleAdd = () => {
     const finalQty = typeof quantity === 'number' ? quantity : minQty;
@@ -53,7 +61,13 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
   return (
     <div className="group bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 overflow-hidden flex flex-col">
       <div className="h-56 bg-slate-100 relative overflow-hidden shrink-0">
-        {crop.imageUrl ? (
+        {crop.category === 'pulses' ? (
+          <img 
+            src={pulseImages[crop.subCategory] || pulseImages.default} 
+            alt={crop.cropName} 
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+          />
+        ) : crop.imageUrl ? (
           <img 
             src={crop.imageUrl} 
             alt={crop.cropName} 
@@ -125,6 +139,8 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
           </div>
         </div>
 
+
+
         {crop.availableQuantityKg > 0 ? (
           <div className="flex gap-3 mt-auto">
             <div className="relative flex flex-col justify-center shrink-0 w-24">
@@ -147,7 +163,7 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
             </div>
             <button 
               onClick={handleAdd}
-              disabled={quantity === '' || quantity < minQty}
+              disabled={quantity === '' || Number(quantity) < minQty}
               className={`flex-1 py-4 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg active:scale-95 group-hover:shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed ${added ? 'bg-green-600 hover:bg-green-700 shadow-green-500/20' : 'bg-slate-900 hover:bg-orange-600'}`}
             >
               {added ? "Added ✓" : "Add to Cart"}
@@ -172,6 +188,7 @@ function DashboardContent() {
   const [crops, setCrops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [orders, setOrders] = useState<any[]>([]);
   
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -198,6 +215,7 @@ function DashboardContent() {
       setUser(parsedUser);
       // Fetch crops based on url params OR default to user pinCode if no location/pinCode specified
       fetchCrops(parsedUser.pinCode);
+      fetchOrders(parsedUser._id);
     }
   }, [searchParams]); // Re-fetch when URL changes
 
@@ -220,6 +238,54 @@ function DashboardContent() {
       console.error("Failed to fetch crops:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOrders = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/orders?consumerId=${userId}`);
+      const data = await res.json();
+      if (res.ok) {
+        setOrders(data.orders);
+      }
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+    }
+  };
+
+  const handleRateFarmer = async (order: any) => {
+    const rating = prompt("Enter rating (1-5):");
+    const comment = prompt("Enter comment:");
+    
+    if (!rating || !comment) return;
+    
+    const ratingNum = parseInt(rating);
+    if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+      toast.error("Invalid rating. Must be 1-5");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listingId: order.listingId?._id,
+          consumerId: user._id,
+          farmerId: order.farmerId?._id,
+          rating: ratingNum,
+          comment,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("Review submitted successfully!");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to submit review");
+      }
+    } catch (err) {
+      toast.error("Something went wrong");
     }
   };
 
@@ -462,6 +528,52 @@ function DashboardContent() {
                     </button>
                   </div>
                 )}
+
+                {/* My Orders Section */}
+                <div className="mt-16 bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
+                  <div className="flex justify-between items-center mb-8">
+                    <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                      <ShoppingBag className="text-orange-500" size={28} />
+                      My Orders
+                    </h2>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <div key={order._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-3xl bg-slate-50 border border-slate-100 gap-4 hover:border-orange-200 transition-all">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{order._id.substring(0, 8)}</span>
+                            <span className="text-slate-300">|</span>
+                            <span className="text-sm font-bold text-slate-900">Farmer: {order.farmerId?.name || "Unknown Farmer"}</span>
+                          </div>
+                          <p className="text-slate-700 font-medium">{order.quantity}kg of <span className="font-bold text-slate-900">{order.listingId?.cropName || "Unknown Crop"}</span></p>
+                          <p className="text-xs text-slate-400 font-bold mt-1">Total: ₹{order.totalPrice}</p>
+                        </div>
+                        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                          <span className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
+                            order.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                            order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                            'bg-slate-200 text-slate-600'
+                          }`}>
+                            {order.status}
+                          </span>
+                          
+                          <button 
+                            onClick={() => handleRateFarmer(order)}
+                            className="px-4 py-2 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
+                          >
+                            Rate
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {orders.length === 0 && (
+                      <p className="text-slate-500 font-medium text-center py-4">No orders placed yet.</p>
+                    )}
+                  </div>
+                </div>
+
               </>
             )}
           </div>

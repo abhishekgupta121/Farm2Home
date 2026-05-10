@@ -10,13 +10,14 @@ export interface ICrop extends mongoose.Document {
   farmerMobile: string;
   pinCode: string;
   cropName: string;
-  category: "vegetable" | "fruit" | "grain" | "spice" | "other";
+  category: "vegetable" | "fruit" | "grain" | "pulses" | "spice" | "other";
+  subCategory?: string;
   listingType: "standard" | "ugly-sell" | "pre-list";
   pricePerKg: number;
   availableQuantityKg: number;
   description: string;
   harvestDate: Date;
-  status: "pending" | "active" | "sold" | "pre-booked" | "rejected";
+  status: "pending" | "active" | "sold" | "pre-booked" | "rejected" | "paused";
   imageUrl?: string;
   isOrganic: boolean;
   isVerifiedFarmer: boolean;
@@ -44,8 +45,9 @@ const CropSchema = new mongoose.Schema<ICrop>(
     category: {
       type: String,
       required: true,
-      enum: ["vegetable", "fruit", "grain", "spice", "other"],
+      enum: ["vegetable", "fruit", "grain", "pulses", "spice", "other"],
     },
+    subCategory: { type: String, default: "" },
     listingType: {
       type: String,
       required: true,
@@ -60,7 +62,7 @@ const CropSchema = new mongoose.Schema<ICrop>(
     status: {
       type: String,
       required: true,
-      enum: ["pending", "active", "sold", "pre-booked", "rejected"],
+      enum: ["pending", "active", "sold", "pre-booked", "rejected", "paused"],
       default: "pending",
     },
     isOrganic: { type: Boolean, default: false },
@@ -70,5 +72,10 @@ const CropSchema = new mongoose.Schema<ICrop>(
   { timestamps: true }
 );
 
-export default (mongoose.models.Crop as mongoose.Model<ICrop>) || mongoose.model<ICrop>("Crop", CropSchema);
+// Force model recreation in development to apply schema changes
+if (process.env.NODE_ENV !== "production") {
+  delete mongoose.models.Crop;
+}
+
+export default mongoose.models.Crop || mongoose.model<ICrop>("Crop", CropSchema);
 

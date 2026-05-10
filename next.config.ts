@@ -6,7 +6,20 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "goqii.com",
+      },
+      {
+        protocol: "https",
+        hostname: "5.imimg.com",
+      },
     ],
+  },
+  experimental: {
+    turbopack: {
+      root: './',
+    },
   },
 };
 

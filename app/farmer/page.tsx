@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { UploadCloud, Image as ImageIcon, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import FarmerNavbar from "@/app/components/FarmerNavbar";
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function FarmerHomePage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -16,20 +18,24 @@ export default function FarmerHomePage() {
   const [formData, setFormData] = useState({
     cropName: "",
     category: "vegetable",
+    subCategory: "",
     pricePerKg: "",
     availableQuantityKg: "",
     harvestDate: new Date().toISOString().split('T')[0],
     description: "",
     listingType: "standard",
-    imageUrl: ""
+    imageUrl: "",
+    pinCode: ""
   });
 
   const SAMPLE_IMAGES = [
     { name: "Tomatoes", url: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=400" },
     { name: "Potatoes", url: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=400" },
     { name: "Wheat", url: "https://images.unsplash.com/photo-1501430654243-c934cec2e1c0?auto=format&fit=crop&q=80&w=400" },
-    { name: "Carrots", url: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&q=80&w=400" },
-    { name: "Onions", url: "https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&q=80&w=400" },
+    { name: "Pulses", url: "https://goqii.com/blog/wp-content/uploads/Why-Pulses-Are-Good-For-You-1024x683.jpg" },
+    { name: "Moong Dal", url: "https://5.imimg.com/data5/SELLER/Default/2025/9/543231555/LO/GS/HR/45333637/30kg-moong-daal-1000x1000.jpeg" },
+    { name: "Masoor Dal", url: "https://5.imimg.com/data5/SELLER/Default/2023/3/294545924/WG/XA/HG/40169047/malka-masoor-dal-1000x1000.jpg" },
+    { name: "Toor Dal", url: "https://5.imimg.com/data5/SELLER/Default/2022/7/CH/AJ/EW/124695288/yellow-thur-dhall-500x500.png" },
   ];
 
   useEffect(() => {
@@ -37,7 +43,9 @@ export default function FarmerHomePage() {
     if (!userData) {
       router.push("/login");
     } else {
-      setUser(JSON.parse(userData));
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      setFormData(prev => ({ ...prev, pinCode: parsedUser.pinCode || "" }));
     }
   }, [router]);
 
@@ -65,6 +73,11 @@ export default function FarmerHomePage() {
     e.preventDefault();
     if (!user) return;
 
+    if (!formData.imageUrl) {
+      setError("Image is mandatory! Please upload a real photo of your crop.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError("");
 
@@ -78,7 +91,6 @@ export default function FarmerHomePage() {
           farmerName: user.name,
           farmName: user.farmName,
           farmerMobile: user.mobileNumber,
-          pinCode: user.pinCode,
         }),
       });
 
@@ -136,7 +148,7 @@ export default function FarmerHomePage() {
               {/* Crop Name */}
               <div className="sm:col-span-2">
                 <label htmlFor="cropName" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
-                  Crop Name
+                  {t('cropName')}
                 </label>
                 <input
                   type="text"
@@ -214,7 +226,7 @@ export default function FarmerHomePage() {
               {/* Category */}
               <div>
                 <label htmlFor="category" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
-                  Category
+                  {t('category')}
                 </label>
                 <select
                   id="category"
@@ -224,13 +236,36 @@ export default function FarmerHomePage() {
                   className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm"
                   required
                 >
-                  <option value="vegetable">Vegetable</option>
-                  <option value="fruit">Fruit</option>
-                  <option value="grain">Grain</option>
-                  <option value="spice">Spice</option>
-                  <option value="other">Other</option>
+                  <option value="vegetable">{t('vegetables')}</option>
+                  <option value="fruit">{t('fruits')}</option>
+                  <option value="grain">{t('grains')}</option>
+                  <option value="pulses">{t('pulses')}</option>
+                  <option value="spice">{t('spices')}</option>
+                  <option value="other">{t('other')}</option>
                 </select>
               </div>
+
+              {/* Sub-category for Pulses */}
+              {formData.category === "pulses" && (
+                <div>
+                  <label htmlFor="subCategory" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                    Sub-category
+                  </label>
+                  <select
+                    id="subCategory"
+                    name="subCategory"
+                    value={formData.subCategory}
+                    onChange={handleChange}
+                    className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm"
+                    required
+                  >
+                    <option value="">Select Pulse Type</option>
+                    <option value="Moong Dal">Moong Dal</option>
+                    <option value="Masoor Dal">Masoor Dal</option>
+                    <option value="Toor Dal">Toor Dal (Arhar Dal)</option>
+                  </select>
+                </div>
+              )}
 
               {/* Listing Type */}
               <div>
@@ -249,6 +284,25 @@ export default function FarmerHomePage() {
                   <option value="ugly-sell">Ugly Sell (Discounted)</option>
                   <option value="pre-list">Pre-list (Future Harvest)</option>
                 </select>
+              </div>
+
+              {/* Pincode */}
+              <div>
+                <label htmlFor="pinCode" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                  Pincode
+                </label>
+                <input
+                  type="text"
+                  id="pinCode"
+                  name="pinCode"
+                  value={formData.pinCode}
+                  onChange={handleChange}
+                  className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm"
+                  placeholder="e.g. 462001"
+                  pattern="[0-9]{6}"
+                  title="Please provide a valid 6-digit PIN code"
+                  required
+                />
               </div>
 
               {/* Price */}
@@ -334,15 +388,15 @@ export default function FarmerHomePage() {
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Uploading...
+                    {t('uploading')}
                   </span>
                 ) : isSuccess ? (
                   <span className="flex items-center gap-2">
-                    <CheckCircle2 size={24} /> Listing Published!
+                    <CheckCircle2 size={24} /> {t('published')}
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    <UploadCloud size={24} /> Publish Crop Listing
+                    <UploadCloud size={24} /> {t('submitListing')}
                   </span>
                 )}
               </button>

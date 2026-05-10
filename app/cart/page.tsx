@@ -105,7 +105,7 @@ function CartItemCard({ item, handleUpdateQuantity, handleRemove, updatingId }: 
 }
 
 export default function CartPage() {
-  const { cart, loading, updateQuantity, removeFromCart, totalItems, totalPrice } = useCart();
+  const { cart, loading, updateQuantity, removeFromCart, totalItems, totalPrice, clearCart } = useCart();
   const router = useRouter();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -129,6 +129,47 @@ export default function CartPage() {
     setUpdatingId(productId);
     await removeFromCart(productId);
     setUpdatingId(null);
+  };
+
+  const handleCheckout = async () => {
+    const userData = localStorage.getItem("user");
+    if (!userData) {
+      toast.error("Please login to checkout");
+      return;
+    }
+    const user = JSON.parse(userData);
+
+    if (!cart) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    try {
+      for (const item of cart.items) {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            listingId: item.productId?._id,
+            consumerId: user._id,
+            farmerId: item.productId?.farmerId?._id || item.productId?.farmerId,
+            quantity: item.quantity,
+            totalPrice: item.productId?.pricePerKg * item.quantity,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to place order");
+        }
+      }
+
+      toast.success("Order placed successfully!");
+      clearCart();
+      router.push("/consumer/dashboard");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   if (loading) {
@@ -200,7 +241,10 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <button className="w-full py-4 bg-orange-500 text-white rounded-2xl font-black text-lg uppercase tracking-widest hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/30 active:scale-95">
+                <button 
+                  onClick={handleCheckout}
+                  className="w-full py-4 bg-orange-500 text-white rounded-2xl font-black text-lg uppercase tracking-widest hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/30 active:scale-95"
+                >
                   Proceed to Checkout
                 </button>
               </div>
