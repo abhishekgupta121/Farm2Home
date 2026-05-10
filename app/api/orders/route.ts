@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/lib/models/Order";
+<<<<<<< HEAD
 import Crop from "@/lib/models/Crop";
 import mongoose from "mongoose";
 
@@ -44,10 +45,17 @@ export async function GET(req: Request) {
 }
 
 // POST /api/orders
+=======
+import User from "@/lib/models/User";
+import Cart from "@/lib/models/Cart";
+import Crop from "@/lib/models/Crop";
+
+>>>>>>> 2f64611 (Implemented Digital Wallet with ₹50,000 initial balance, Order processing API, and detailed Order Summary view)
 export async function POST(req: Request) {
   try {
     await dbConnect();
     const body = await req.json();
+<<<<<<< HEAD
     const { listingId, consumerId, farmerId, quantity, totalPrice } = body;
 
     let validConsumerId = consumerId;
@@ -96,5 +104,62 @@ export async function POST(req: Request) {
       { error: error.message || "Failed to place order" },
       { status: 500 }
     );
+=======
+    const { userId, items, totalAmount } = body;
+
+    if (!userId || !items || items.length === 0) {
+      return NextResponse.json({ error: "Invalid order data" }, { status: 400 });
+    }
+
+    // 1. Fetch User and Check Balance
+    const user = await User.findById(userId);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (user.walletBalance < totalAmount) {
+      return NextResponse.json({ error: "Insufficient wallet balance" }, { status: 400 });
+    }
+
+    // 2. Create the Order
+    const newOrder = await Order.create({
+      consumerId: userId,
+      items: items.map((item: any) => ({
+        productId: item.productId._id,
+        cropName: item.productId.cropName,
+        quantity: item.quantity,
+        pricePerKg: item.productId.pricePerKg,
+        total: item.productId.pricePerKg * item.quantity,
+        farmerId: item.productId.farmerId,
+      })),
+      totalAmount,
+      paymentStatus: "paid",
+      orderStatus: "placed",
+    });
+
+    // 3. Deduct Wallet Balance
+    user.walletBalance -= totalAmount;
+    await user.save();
+
+    // 4. Update Crop Quantities (Deduct stock)
+    for (const item of items) {
+        await Crop.findByIdAndUpdate(item.productId._id, {
+            $inc: { availableQuantityKg: -item.quantity }
+        });
+    }
+
+    // 5. Clear User's Cart
+    await Cart.findOneAndUpdate({ userId }, { items: [] });
+
+    return NextResponse.json({ 
+      message: "Order placed successfully", 
+      order: newOrder,
+      newBalance: user.walletBalance 
+    }, { status: 201 });
+
+  } catch (error: any) {
+    console.error("Order creation error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+>>>>>>> 2f64611 (Implemented Digital Wallet with ₹50,000 initial balance, Order processing API, and detailed Order Summary view)
   }
 }

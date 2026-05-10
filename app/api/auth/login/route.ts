@@ -51,6 +51,12 @@ export async function POST(req: Request) {
       );
     }
 
+    // Initialize balance for existing users if missing
+    if (user.walletBalance === undefined || user.walletBalance === null) {
+      user.walletBalance = 50000;
+      await user.save();
+    }
+
     // Return user without password
     const userResponse = {
       _id: user._id,
@@ -60,6 +66,7 @@ export async function POST(req: Request) {
       farmName: user.farmName,
       pinCode: user.pinCode,
       address: user.address,
+      walletBalance: user.walletBalance,
     };
 
     return NextResponse.json(

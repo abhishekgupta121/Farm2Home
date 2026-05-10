@@ -215,9 +215,26 @@ function DashboardContent() {
       setUser(parsedUser);
       // Fetch crops based on url params OR default to user pinCode if no location specified
       fetchCrops(parsedUser.pinCode);
+      // Refresh wallet balance from DB
+      refreshWallet(parsedUser._id);
+      // Fetch order history
       fetchOrders(parsedUser._id);
     }
   }, [searchParams]); // Re-fetch when URL changes
+
+  const refreshWallet = async (userId: string) => {
+    try {
+      const res = await axios.get(`/api/user/wallet?userId=${userId}`);
+      const balance = res.data.walletBalance;
+      setUser((prev: any) => {
+        const updated = { ...prev, walletBalance: balance };
+        localStorage.setItem("user", JSON.stringify(updated));
+        return updated;
+      });
+    } catch (err) {
+      console.error("Failed to refresh wallet:", err);
+    }
+  };
 
   const fetchCrops = async (defaultPin: string) => {
     setLoading(true);
@@ -406,6 +423,16 @@ function DashboardContent() {
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+            <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl text-white shadow-lg shadow-indigo-500/20">
+              <div className="p-2 bg-white/20 rounded-xl">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">Digital Wallet</p>
+                <p className="text-sm font-black leading-none">₹{user.walletBalance || 0}</p>
+              </div>
+            </div>
+
             <Link href="/cart" className="relative p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-orange-50 hover:text-orange-600 transition-colors">
               <ShoppingBag size={22} />
               {totalItems > 0 && (

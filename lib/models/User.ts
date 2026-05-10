@@ -57,6 +57,10 @@ const UserSchema = new mongoose.Schema<IUser>(
       type: String,
       required: false,
     },
+    walletBalance: {
+      type: Number,
+      default: 50000, 
+    },
   },
   {
     timestamps: true,
