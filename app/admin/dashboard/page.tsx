@@ -297,6 +297,14 @@ export default function AdminDashboard() {
                       <span className="px-4 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest">
                         ORDER #{order._id.slice(-8).toUpperCase()}
                       </span>
+                      <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${
+                        order.orderStatus === 'placed' ? 'bg-orange-50 text-orange-600 border-orange-200' : 
+                        order.orderStatus === 'shipped' ? 'bg-blue-50 text-blue-600 border-blue-200' : 
+                        order.orderStatus === 'delivered' ? 'bg-green-50 text-green-600 border-green-200' :
+                        'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}>
+                        STATUS: {order.orderStatus}
+                      </span>
                       <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest border ${
                         order.paymentStatus === 'paid' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-green-50 text-green-600 border-green-200'
                       }`}>

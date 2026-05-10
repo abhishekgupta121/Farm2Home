@@ -86,6 +86,10 @@ export async function POST(req: Request) {
       });
     }
 
+    // Generate OTPs
+    const farmerOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const consumerOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
     // 3. Create the Order
     const newOrder = await Order.create({
       consumerId: userId,
@@ -100,6 +104,8 @@ export async function POST(req: Request) {
       totalAmount,
       paymentStatus: "paid", // Paid to admin (escrow)
       orderStatus: "placed",
+      farmerOtp,
+      consumerOtp,
     });
 
     // 4. Deduct Consumer Wallet & Add to Admin Wallet (Escrow)

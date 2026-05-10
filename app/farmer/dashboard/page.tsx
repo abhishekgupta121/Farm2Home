@@ -388,24 +388,31 @@ export default function FarmerDashboard() {
                 <button className="text-blue-600 text-sm font-black uppercase tracking-widest hover:underline">View All</button>
               </div>
               <div className="space-y-4">
-                {orders.map((order: any) => (
+                {orders.filter((order: any) => order.orderStatus !== 'cancelled').map((order: any) => (
                   <div key={order._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-3xl bg-slate-50 border border-slate-100 gap-4 group hover:border-blue-200 transition-all">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{order._id.substring(0, 8)}</span>
+                        <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black tracking-widest uppercase">
+                          ORDER #{order._id.slice(-8).toUpperCase()}
+                        </span>
                         <span className="text-slate-300">|</span>
                         <span className="text-sm font-bold text-slate-900">{order.consumerId?.name || "Test Consumer"}</span>
                       </div>
                       <p className="text-slate-700 font-medium">{order.quantity}kg of <span className="font-bold text-slate-900">{order.listingId?.cropName || "Unknown Crop"}</span> — <span className="text-green-600 font-bold">₹{order.totalPrice}</span></p>
                       <p className="text-xs text-slate-400 font-bold mt-1">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
-                    <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                      <div className="bg-orange-50 border border-orange-100 px-4 py-2 rounded-xl text-center">
+                        <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-0.5">Pickup OTP</p>
+                        <p className="font-black text-orange-700 tracking-[0.2em]">{order.farmerOtp || "123456"}</p>
+                      </div>
                       <span className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
-                        order.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                        order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                        order.orderStatus === 'placed' ? 'bg-orange-100 text-orange-700' :
+                        order.orderStatus === 'shipped' ? 'bg-blue-100 text-blue-700' :
+                        order.orderStatus === 'delivered' ? 'bg-green-100 text-green-700' :
                         'bg-slate-200 text-slate-600'
                       }`}>
-                        {order.status}
+                        {order.orderStatus}
                       </span>
                     </div>
                   </div>
