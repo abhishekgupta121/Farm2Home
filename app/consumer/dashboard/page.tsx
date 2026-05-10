@@ -134,6 +134,10 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
             <span className="text-slate-900 font-bold capitalize leading-tight">{formatAddress(crop.farmerId?.address, crop.pinCode, crop.location)}</span>
           </div>
           <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200">
+            <span className="text-slate-500 font-bold">Listed On</span>
+            <span className="text-slate-900 font-black">{new Date(crop.createdAt).toLocaleDateString()}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200">
             <span className="text-slate-500 font-bold">Availability</span>
             {crop.availableQuantityKg > 0 ? (
               <span className="text-green-600 font-black">{crop.availableQuantityKg} kg</span>
