@@ -15,7 +15,8 @@ export default function PreListPage() {
 
   const [formData, setFormData] = useState({
     cropName: "",
-    category: "vegetable",
+    category: "pulses",
+    subCategory: "",
     pricePerKg: "",
     availableQuantityKg: "",
     harvestDate: "",
@@ -25,10 +26,12 @@ export default function PreListPage() {
   });
 
   const SAMPLE_IMAGES = [
-    { name: "Young Wheat", url: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=400" },
-    { name: "Rice Field", url: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80&w=400" },
-    { name: "Green Mangoes", url: "https://images.unsplash.com/photo-1553134802-ff9b1883cc2c?auto=format&fit=crop&q=80&w=400" },
-    { name: "Apple Orchard", url: "https://images.unsplash.com/photo-1568381329104-165be813d330?auto=format&fit=crop&q=80&w=400" },
+    { name: "Rice", url: "/rice.png" },
+    { name: "Wheat", url: "https://images.unsplash.com/photo-1501430654243-c934cec2e1c0?auto=format&fit=crop&q=80&w=400" },
+    { name: "Pulses", url: "https://goqii.com/blog/wp-content/uploads/Why-Pulses-Are-Good-For-You-1024x683.jpg" },
+    { name: "Mango", url: "/mango.png" },
+    { name: "Apple", url: "/apple.png" },
+    { name: "Potato", url: "/potato.png" },
   ];
 
   useEffect(() => {
@@ -73,6 +76,7 @@ export default function PreListPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          cropName: formData.cropName || formData.subCategory || formData.category,
           farmerId: user._id,
           farmerName: user.name,
           farmName: user.farmName,
@@ -140,21 +144,7 @@ export default function PreListPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-y-8 gap-x-6 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label htmlFor="cropName" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
-                  Expected Crop Name
-                </label>
-                <input
-                  type="text"
-                  id="cropName"
-                  name="cropName"
-                  value={formData.cropName}
-                  onChange={handleChange}
-                  className="block w-full rounded-2xl border-blue-100 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm"
-                  placeholder="e.g. Basmati Rice (Upcoming Harvest)"
-                  required
-                />
-              </div>
+
 
               {/* Image Upload */}
               <div className="sm:col-span-2">
@@ -228,13 +218,79 @@ export default function PreListPage() {
                   className="block w-full rounded-2xl border-blue-100 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm"
                   required
                 >
+                  <option value="pulses">Pulses</option>
+                  <option value="wheat">Wheat</option>
+                  <option value="rice">Rice</option>
                   <option value="vegetable">Vegetable</option>
                   <option value="fruit">Fruit</option>
-                  <option value="grain">Grain</option>
-                  <option value="spice">Spice</option>
-                  <option value="other">Other</option>
                 </select>
               </div>
+
+              {/* Sub-category for Pulses */}
+              {formData.category === "pulses" && (
+                <div>
+                  <label htmlFor="subCategory" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                    Sub-category
+                  </label>
+                  <select
+                    id="subCategory"
+                    name="subCategory"
+                    value={formData.subCategory}
+                    onChange={handleChange}
+                    className="block w-full rounded-2xl border-blue-100 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm"
+                    required
+                  >
+                    <option value="">Select Pulse Type</option>
+                    <option value="Moong Dal">Moong Dal</option>
+                    <option value="Masoor Dal">Masoor Dal</option>
+                    <option value="Toor Dal">Toor Dal (Arhar Dal)</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Sub-category for Vegetables */}
+              {formData.category === "vegetable" && (
+                <div>
+                  <label htmlFor="subCategory" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                    Sub-category
+                  </label>
+                  <select
+                    id="subCategory"
+                    name="subCategory"
+                    value={formData.subCategory}
+                    onChange={handleChange}
+                    className="block w-full rounded-2xl border-blue-100 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm"
+                    required
+                  >
+                    <option value="">Select Vegetable Type</option>
+                    <option value="Potato">Potato</option>
+                    <option value="Onion">Onion</option>
+                    <option value="Garlic">Garlic</option>
+                    <option value="Tomato">Tomato</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Sub-category for Fruits */}
+              {formData.category === "fruit" && (
+                <div>
+                  <label htmlFor="subCategory" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                    Sub-category
+                  </label>
+                  <select
+                    id="subCategory"
+                    name="subCategory"
+                    value={formData.subCategory}
+                    onChange={handleChange}
+                    className="block w-full rounded-2xl border-blue-100 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm"
+                    required
+                  >
+                    <option value="">Select Fruit Type</option>
+                    <option value="Mango">Mango</option>
+                    <option value="Apple">Apple</option>
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label htmlFor="pricePerKg" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
@@ -298,6 +354,45 @@ export default function PreListPage() {
                   className="block w-full rounded-2xl border-blue-100 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm"
                   placeholder="Tell buyers about your upcoming harvest..."
                 ></textarea>
+              </div>
+            </div>
+
+            {/* Farmer Product Listing Disclaimer */}
+            <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 space-y-4 my-8 shadow-sm">
+              <div className="flex items-center gap-2 text-amber-800 font-bold text-lg">
+                <span className="text-2xl">📢</span>
+                <h3>Farmer Product Listing Disclaimer</h3>
+              </div>
+              <p className="text-slate-700 text-sm">
+                By listing your product on the platform, you agree to the following terms:
+              </p>
+              <ul className="list-disc list-inside text-slate-600 text-sm space-y-2">
+                <li>The product delivered must <strong>exactly match</strong> the details and images uploaded by you at the time of listing.</li>
+                <li>The quality category selected must be accurate:
+                  <ul className="ml-6 mt-1 list-none space-y-1 text-slate-500 text-xs">
+                    <li>🔹 <strong>Standard</strong> – Good quality as per market standards</li>
+                    <li>🔹 <strong>Ugly</strong> – Visually imperfect but usable produce</li>
+                    <li>🔹 <strong>Pre-List</strong> – Product not yet harvested but expected</li>
+                  </ul>
+                </li>
+              </ul>
+              <div className="bg-white rounded-2xl p-4 border border-amber-100">
+                <p className="text-slate-700 text-sm">
+                  If an admin representative visits your location for verification and finds that:
+                </p>
+                <ul className="list-disc list-inside text-slate-600 text-sm ml-2 mt-1">
+                  <li>The product does not match the uploaded images/details, or</li>
+                  <li>The quality category is misrepresented</li>
+                </ul>
+                <p className="text-red-600 font-bold text-sm mt-2 flex items-center gap-1">
+                  👉 You will be required to pay the admin visit charges.
+                </p>
+              </div>
+              <div className="bg-green-50 rounded-2xl p-4 border border-green-100 flex items-center gap-2">
+                <span className="text-green-600">✅</span>
+                <p className="text-green-800 text-sm font-medium">
+                  If the product is found to be accurate and matches the listing: <strong>No visit charges will be applied (Free verification)</strong>
+                </p>
               </div>
             </div>
 

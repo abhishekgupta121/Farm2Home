@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   PhoneCall,
   ChevronDown,
+  Wallet,
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 
@@ -26,6 +27,7 @@ const farmerLinks = [
   { name: "Ugly Sell", href: "/farmer/ugly-sell", icon: Star },
   { name: "Pre-list", href: "/farmer/pre-list", icon: CalendarClock },
   { name: "Dashboard", href: "/farmer/dashboard", icon: LayoutDashboard },
+  { name: "Wallet", href: "/farmer/wallet", icon: Wallet },
   { name: "Profile", href: "/farmer/profile", icon: User },
 ];
 

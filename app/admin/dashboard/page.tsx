@@ -68,7 +68,6 @@ export default function AdminDashboard() {
   };
 
   const filteredCrops = pendingCrops.filter(crop => 
-    crop.cropName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     crop.farmerName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

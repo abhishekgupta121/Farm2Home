@@ -168,26 +168,7 @@ export default function FarmerDashboard() {
     <div className="min-h-screen bg-slate-50">
       <FarmerNavbar />
       
-      {/* Live Market Ticker */}
-      <div className="bg-slate-100 py-2 border-b border-slate-200 overflow-hidden">
-        <style>{`
-          @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-          }
-          .marquee-content {
-            display: inline-flex;
-            animation: marquee 20s linear infinite;
-          }
-        `}</style>
-        <div className="marquee-content text-sm font-bold text-slate-700">
-          <span className="mx-4">🍅 Tomatoes: ₹40/kg <span className="text-green-500">↑</span></span>
-          <span className="mx-4">🥔 Potatoes: ₹25/kg <span className="text-red-500">↓</span></span>
-          <span className="mx-4">🌾 Wheat: ₹30/kg <span className="text-green-500">↑</span></span>
-          <span className="mx-4">🥣 Moong Dal: ₹110/kg <span className="text-green-500">↑</span></span>
-          <span className="mx-4">🥣 Masoor Dal: ₹90/kg <span className="text-slate-500">-</span></span>
-        </div>
-      </div>
+
 
       <div className="p-4 sm:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -390,7 +371,7 @@ export default function FarmerDashboard() {
                 <button className="text-blue-600 text-sm font-black uppercase tracking-widest hover:underline">View All</button>
               </div>
               <div className="space-y-4">
-                {orders.filter((order: any) => order.status !== 'pending').map((order: any) => (
+                {orders.map((order: any) => (
                   <div key={order._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-3xl bg-slate-50 border border-slate-100 gap-4 group hover:border-blue-200 transition-all">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
@@ -398,7 +379,7 @@ export default function FarmerDashboard() {
                         <span className="text-slate-300">|</span>
                         <span className="text-sm font-bold text-slate-900">{order.consumerId?.name || "Test Consumer"}</span>
                       </div>
-                      <p className="text-slate-700 font-medium">{order.quantity}kg of <span className="font-bold text-slate-900">{order.listingId?.cropName || "Unknown Crop"}</span></p>
+                      <p className="text-slate-700 font-medium">{order.quantity}kg of <span className="font-bold text-slate-900">{order.listingId?.cropName || "Unknown Crop"}</span> — <span className="text-green-600 font-bold">₹{order.totalPrice}</span></p>
                       <p className="text-xs text-slate-400 font-bold mt-1">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
