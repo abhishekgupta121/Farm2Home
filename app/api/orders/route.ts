@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/lib/models/Order";
-<<<<<<< HEAD
 import Crop from "@/lib/models/Crop";
+import User from "@/lib/models/User";
+import Cart from "@/lib/models/Cart";
 import mongoose from "mongoose";
 
 const MOCK_CONSUMER_ID = "000000000000000000000001";
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
     }
 
     if (farmerId && mongoose.Types.ObjectId.isValid(farmerId)) {
-      filter = { farmerId };
+      filter = { "items.farmerId": farmerId };
     } else if (queryConsumerId && mongoose.Types.ObjectId.isValid(queryConsumerId)) {
       filter = { consumerId: queryConsumerId };
     } else {
@@ -30,9 +31,8 @@ export async function GET(req: Request) {
     }
 
     const orders = await Order.find(filter)
-      .populate("listingId", "cropName pricePerKg")
+      .populate("items.productId", "cropName pricePerKg")
       .populate("consumerId", "name")
-      .populate("farmerId", "name")
       .sort({ createdAt: -1 });
 
     return NextResponse.json({ orders }, { status: 200 });
@@ -45,66 +45,10 @@ export async function GET(req: Request) {
 }
 
 // POST /api/orders
-=======
-import User from "@/lib/models/User";
-import Cart from "@/lib/models/Cart";
-import Crop from "@/lib/models/Crop";
-
->>>>>>> 2f64611 (Implemented Digital Wallet with ₹50,000 initial balance, Order processing API, and detailed Order Summary view)
 export async function POST(req: Request) {
   try {
     await dbConnect();
     const body = await req.json();
-<<<<<<< HEAD
-    const { listingId, consumerId, farmerId, quantity, totalPrice } = body;
-
-    let validConsumerId = consumerId;
-    if (consumerId === "admin-mock-id") {
-      validConsumerId = MOCK_CONSUMER_ID;
-    } else if (!mongoose.Types.ObjectId.isValid(consumerId)) {
-      validConsumerId = new mongoose.Types.ObjectId();
-    }
-
-    let validFarmerId = farmerId;
-    if (!mongoose.Types.ObjectId.isValid(farmerId)) {
-      validFarmerId = new mongoose.Types.ObjectId();
-    }
-
-    if (!listingId || !consumerId || !farmerId || !quantity || !totalPrice) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-
-    // 1. Check stock
-    const crop = await Crop.findById(listingId);
-    if (!crop) {
-      return NextResponse.json({ error: "Crop listing not found" }, { status: 404 });
-    }
-
-    if (crop.availableQuantityKg < quantity) {
-      return NextResponse.json({ error: "Insufficient stock" }, { status: 400 });
-    }
-
-    // 2. Create order
-    const order = await Order.create({
-      listingId,
-      consumerId: validConsumerId,
-      farmerId: validFarmerId,
-      quantity,
-      totalPrice,
-      status: "confirmed"
-    });
-
-    // 3. Reduce stock
-    crop.availableQuantityKg -= quantity;
-    await crop.save();
-
-    return NextResponse.json({ message: "Order placed successfully", order }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || "Failed to place order" },
-      { status: 500 }
-    );
-=======
     const { userId, items, totalAmount } = body;
 
     if (!userId || !items || items.length === 0) {
@@ -159,7 +103,6 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("Order creation error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
->>>>>>> 2f64611 (Implemented Digital Wallet with ₹50,000 initial balance, Order processing API, and detailed Order Summary view)
+    return NextResponse.json({ error: error.message || "Failed to place order" }, { status: 500 });
   }
 }
