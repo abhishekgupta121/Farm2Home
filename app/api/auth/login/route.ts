@@ -17,17 +17,25 @@ export async function POST(req: Request) {
       );
     }
 
-    // Mock Admin Login
+    // Mock Admin Login - Ensure a real Admin doc exists for Escrow
     if (mobileNumber === "0000000000" && password === "password") {
+      let admin = await User.findOne({ role: "admin" });
+      if (!admin) {
+        admin = await User.create({
+          name: "Super Admin",
+          mobileNumber: "0000000000",
+          password: await bcrypt.hash("password", 10),
+          role: "admin",
+          aadhaarNumber: "000000000000",
+          pinCode: "000000",
+          address: "System HQ",
+          walletBalance: 0,
+        });
+      }
       return NextResponse.json(
         { 
           message: "Admin Login successful", 
-          user: {
-            _id: "admin-mock-id",
-            name: "Super Admin",
-            mobileNumber: "0000000000",
-            role: "admin",
-          } 
+          user: admin
         },
         { status: 200 }
       );

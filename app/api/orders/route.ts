@@ -1,3 +1,4 @@
+// UNIQUE_ID: CLEAN_FILE_v2
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/lib/models/Order";
@@ -15,6 +16,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const farmerId = searchParams.get("farmerId");
     const consumerId = searchParams.get("consumerId");
+    const isAdmin = searchParams.get("admin") === "true";
 
     let filter = {};
     let queryConsumerId = consumerId;
@@ -22,12 +24,14 @@ export async function GET(req: Request) {
       queryConsumerId = MOCK_CONSUMER_ID;
     }
 
-    if (farmerId && mongoose.Types.ObjectId.isValid(farmerId)) {
+    if (isAdmin) {
+      filter = {}; // Admin sees all
+    } else if (farmerId && mongoose.Types.ObjectId.isValid(farmerId)) {
       filter = { "items.farmerId": farmerId };
     } else if (queryConsumerId && mongoose.Types.ObjectId.isValid(queryConsumerId)) {
       filter = { consumerId: queryConsumerId };
     } else {
-      return NextResponse.json({ error: "Valid Farmer ID or Consumer ID is required" }, { status: 400 });
+      return NextResponse.json({ error: "Valid ID is required" }, { status: 400 });
     }
 
     const orders = await Order.find(filter)
@@ -65,7 +69,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Insufficient wallet balance" }, { status: 400 });
     }
 
-    // 2. Create the Order
+    // 2. Find Admin for Escrow
+    const admin = await User.findOne({ role: "admin" });
+    if (!admin) {
+      return NextResponse.json({ error: "System error: Admin account not found" }, { status: 500 });
+    }
+
+    // 3. Create the Order
     const newOrder = await Order.create({
       consumerId: userId,
       items: items.map((item: any) => ({
@@ -77,26 +87,29 @@ export async function POST(req: Request) {
         farmerId: item.productId.farmerId,
       })),
       totalAmount,
-      paymentStatus: "paid",
+      paymentStatus: "paid", // Paid to admin (escrow)
       orderStatus: "placed",
     });
 
-    // 3. Deduct Wallet Balance
+    // 4. Deduct Consumer Wallet & Add to Admin Wallet (Escrow)
     user.walletBalance -= totalAmount;
     await user.save();
 
-    // 4. Update Crop Quantities (Deduct stock)
+    admin.walletBalance += totalAmount;
+    await admin.save();
+
+    // 5. Update Crop Quantities (Deduct stock)
     for (const item of items) {
         await Crop.findByIdAndUpdate(item.productId._id, {
             $inc: { availableQuantityKg: -item.quantity }
         });
     }
 
-    // 5. Clear User's Cart
+    // 6. Clear User's Cart
     await Cart.findOneAndUpdate({ userId }, { items: [] });
 
     return NextResponse.json({ 
-      message: "Order placed successfully", 
+      message: "Order placed successfully. Funds held in escrow.", 
       order: newOrder,
       newBalance: user.walletBalance 
     }, { status: 201 });
