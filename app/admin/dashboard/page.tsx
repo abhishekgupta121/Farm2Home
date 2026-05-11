@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, ShieldCheck, CheckCircle, XCircle, Clock, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, X } from "lucide-react";
+import Link from "next/link";
+import { LogOut, ShieldCheck, CheckCircle, XCircle, Clock, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, X, Truck } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import { translations } from "@/lib/translations";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -13,6 +15,14 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"crops" | "orders">("crops");
+  const [lang, setLang] = useState<'en' | 'hi'>('en');
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem("lang") as 'en' | 'hi';
+    if (savedLang) {
+      setLang(savedLang);
+    }
+  }, []);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -170,8 +180,8 @@ export default function AdminDashboard() {
               <ShieldCheck size={24} className="text-blue-400" />
             </div>
             <div>
-              <span className="text-lg font-black tracking-tight block">Admin Console</span>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Farm2Home Escrow</span>
+              <span className="text-lg font-black tracking-tight block">{translations[lang].ad_adminConsole}</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].ad_escrowSub}</span>
             </div>
           </div>
           
@@ -181,9 +191,25 @@ export default function AdminDashboard() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">Escrow Wallet</p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">{translations[lang].ad_escrowWallet}</p>
                 <p className="text-sm font-black leading-none">₹{user.walletBalance || 0}</p>
               </div>
+            </div>
+
+            {/* Language Toggle */}
+            <div className="flex gap-1 bg-slate-800 border border-slate-700 rounded-lg p-1 text-xs font-bold shadow-sm">
+              <button 
+                onClick={() => { setLang('en'); localStorage.setItem('lang', 'en'); }} 
+                className={`px-3 py-1.5 rounded-md transition-all ${lang === 'en' ? 'bg-blue-500 text-white' : 'text-slate-400 hover:bg-slate-700'}`}
+              >
+                English
+              </button>
+              <button 
+                onClick={() => { setLang('hi'); localStorage.setItem('lang', 'hi'); }} 
+                className={`px-3 py-1.5 rounded-md transition-all ${lang === 'hi' ? 'bg-blue-500 text-white' : 'text-slate-400 hover:bg-slate-700'}`}
+              >
+                हिंदी
+              </button>
             </div>
 
             <button
@@ -191,7 +217,7 @@ export default function AdminDashboard() {
               className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-red-500 hover:text-white font-bold rounded-xl transition-all active:scale-95 text-sm"
             >
               <LogOut size={16} />
-              Logout
+              {translations[lang].ad_logout}
             </button>
           </div>
         </div>
@@ -203,13 +229,13 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab("crops")}
             className={`px-8 py-3 rounded-[1.2rem] font-black text-sm tracking-widest transition-all ${activeTab === 'crops' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            PENDING CROPS ({pendingCrops.length})
+            {translations[lang].ad_pendingCrops} ({pendingCrops.length})
           </button>
           <button 
             onClick={() => setActiveTab("orders")}
             className={`px-8 py-3 rounded-[1.2rem] font-black text-sm tracking-widest transition-all ${activeTab === 'orders' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            ORDER MANAGEMENT ({orders.length})
+            {translations[lang].ad_orderManagement} ({orders.length})
           </button>
         </div>
 
@@ -218,7 +244,7 @@ export default function AdminDashboard() {
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
               type="text" 
-              placeholder={activeTab === "crops" ? "Search crops or farmers..." : "Search Order ID or Consumer..."} 
+              placeholder={activeTab === "crops" ? translations[lang].ad_searchCropsPlaceholder : translations[lang].ad_searchOrdersPlaceholder} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:border-blue-500 transition-all"
@@ -242,7 +268,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-black text-slate-900 truncate">{crop.cropName}</h3>
-                    <p className="text-sm font-bold text-slate-500">Farmer: {crop.farmerName}</p>
+                    <p className="text-sm font-bold text-slate-500">{translations[lang].ad_farmerPrefix}{crop.farmerName}</p>
                     <span className="inline-block mt-2 px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-[10px] font-black uppercase tracking-widest border border-blue-100">
                       {crop.listingType}
                     </span>
@@ -250,20 +276,20 @@ export default function AdminDashboard() {
                 </div>
                 <div className="bg-slate-50 rounded-2xl p-4 mb-6 space-y-2 text-sm font-medium">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Price</span>
+                    <span className="text-slate-500">{translations[lang].ad_price}</span>
                     <span className="text-slate-900 font-black">₹{crop.pricePerKg}/kg</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Stock</span>
+                    <span className="text-slate-500">{translations[lang].ad_stock}</span>
                     <span className="text-slate-900 font-black">{crop.availableQuantityKg} kg</span>
                   </div>
                 </div>
                 <div className="mt-auto flex gap-3">
                   <button onClick={() => handleStatusUpdate(crop._id, "active")} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 text-sm">
-                    Approve
+                    {translations[lang].ad_approve}
                   </button>
                   <button onClick={() => handleStatusUpdate(crop._id, "rejected")} className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 text-sm">
-                    Reject
+                    {translations[lang].ad_reject}
                   </button>
                 </div>
               </div>
@@ -274,16 +300,16 @@ export default function AdminDashboard() {
             {/* Delivery Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending Delivery</p>
-                <h3 className="text-2xl font-black text-slate-900">{orders.filter(o => o.orderStatus === 'placed').length} Orders</h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_pendingDelivery}</p>
+                <h3 className="text-2xl font-black text-slate-900">{orders.filter(o => o.orderStatus === 'placed').length} {translations[lang].ad_ordersCount}</h3>
               </div>
               <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Completed / Paid</p>
-                <h3 className="text-2xl font-black text-green-600">{orders.filter(o => o.paymentStatus === 'transferred_to_farmer').length} Orders</h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_completedPaid}</p>
+                <h3 className="text-2xl font-black text-green-600">{orders.filter(o => o.paymentStatus === 'transferred_to_farmer').length} {translations[lang].ad_ordersCount}</h3>
               </div>
               <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Refunded / Cancelled</p>
-                <h3 className="text-2xl font-black text-red-500">{orders.filter(o => o.orderStatus === 'cancelled').length} Orders</h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_refundedCancelled}</p>
+                <h3 className="text-2xl font-black text-red-500">{orders.filter(o => o.orderStatus === 'cancelled').length} {translations[lang].ad_ordersCount}</h3>
               </div>
             </div>
 
@@ -295,7 +321,7 @@ export default function AdminDashboard() {
                   <div className="flex-1 space-y-6">
                     <div className="flex flex-wrap items-center gap-4">
                       <span className="px-4 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest">
-                        ORDER #{order._id.slice(-8).toUpperCase()}
+                        {translations[lang].ad_orderId}{order._id.slice(-8).toUpperCase()}
                       </span>
                       <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${
                         order.orderStatus === 'placed' ? 'bg-orange-50 text-orange-600 border-orange-200' : 
@@ -303,12 +329,12 @@ export default function AdminDashboard() {
                         order.orderStatus === 'delivered' ? 'bg-green-50 text-green-600 border-green-200' :
                         'bg-slate-100 text-slate-500 border-slate-200'
                       }`}>
-                        STATUS: {order.orderStatus}
+                        {translations[lang].ad_statusPrefix}{order.orderStatus}
                       </span>
                       <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest border ${
                         order.paymentStatus === 'paid' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-green-50 text-green-600 border-green-200'
                       }`}>
-                        {order.paymentStatus === 'paid' ? 'HOLDING IN ESCROW' : 'TRANSFERRED TO FARMER'}
+                        {order.paymentStatus === 'paid' ? translations[lang].ad_holdingEscrow : translations[lang].ad_transferredToFarmer}
                       </span>
                       <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
                         <Clock size={14} />
@@ -318,7 +344,7 @@ export default function AdminDashboard() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Consumer Details</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{translations[lang].ad_consumerDetails}</p>
                         <h4 className="text-lg font-black text-slate-900 mb-1">{order.consumerId?.name}</h4>
                         <p className="text-sm font-bold text-slate-600 mb-2">{order.consumerId?.mobileNumber}</p>
                         <p className="text-xs font-medium text-slate-500 leading-relaxed">
@@ -328,18 +354,18 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100/50">
-                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">Order Summary</p>
+                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">{translations[lang].ad_orderSummary}</p>
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
-                            <span className="text-sm font-bold text-slate-600">Total Items</span>
-                            <span className="text-sm font-black text-slate-900">{order.items.length} Varieties</span>
+                            <span className="text-sm font-bold text-slate-600">{translations[lang].ad_totalItems}</span>
+                            <span className="text-sm font-black text-slate-900">{order.items.length} {translations[lang].ad_varieties}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-sm font-bold text-slate-600">Total Weight</span>
+                            <span className="text-sm font-bold text-slate-600">{translations[lang].ad_totalWeight}</span>
                             <span className="text-sm font-black text-slate-900">{order.items.reduce((acc: number, item: any) => acc + item.quantity, 0)} kg</span>
                           </div>
                           <div className="pt-2 border-t border-blue-100 flex justify-between items-center mt-2">
-                            <span className="text-sm font-black text-blue-700">Total Payout</span>
+                            <span className="text-sm font-black text-blue-700">{translations[lang].ad_totalPayout}</span>
                             <span className="text-2xl font-black text-blue-900">₹{order.totalAmount}</span>
                           </div>
                         </div>
@@ -347,7 +373,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Itemized Breakdown & Farmer Info</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">{translations[lang].ad_itemizedBreakdown}</p>
                       <div className="space-y-3">
                         {order.items.map((item: any, idx: number) => (
                           <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border border-slate-100 rounded-2xl gap-4">
@@ -409,6 +435,8 @@ export default function AdminDashboard() {
                         <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Transaction Complete</p>
                       </div>
                     )}
+                    
+
                   </div>
                 </div>
               </div>

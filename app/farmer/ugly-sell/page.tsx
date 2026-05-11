@@ -59,8 +59,30 @@ export default function UglySellPage() {
     }
   };
 
-  const setSampleImage = (url: string) => {
-    setFormData(prev => ({ ...prev, imageUrl: url }));
+  const setSampleImage = (url: string, name: string) => {
+    setFormData(prev => {
+      const updates: any = { imageUrl: url };
+      if (name === "Potato") {
+        updates.category = "vegetable";
+        updates.subCategory = "Potato";
+      } else if (name === "Rice") {
+        updates.category = "rice";
+        updates.subCategory = "";
+      } else if (name === "Wheat") {
+        updates.category = "wheat";
+        updates.subCategory = "";
+      } else if (name === "Pulses") {
+        updates.category = "pulses";
+        updates.subCategory = "";
+      } else if (name === "Mango") {
+        updates.category = "fruit";
+        updates.subCategory = "Mango";
+      } else if (name === "Apple") {
+        updates.category = "fruit";
+        updates.subCategory = "Apple";
+      }
+      return { ...prev, ...updates };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -183,7 +205,7 @@ export default function UglySellPage() {
                         <button
                           key={img.url}
                           type="button"
-                          onClick={() => setSampleImage(img.url)}
+                          onClick={() => setSampleImage(img.url, img.name)}
                           className={`flex items-center gap-2 p-2 rounded-xl text-[10px] font-bold transition-all border ${
                             formData.imageUrl === img.url 
                             ? "bg-orange-600 text-white border-orange-600 shadow-md" 

@@ -6,6 +6,7 @@ import { LogOut, Tractor, Package, Bell, ShoppingBag, ArrowRight, Trash2, Plus, 
 import Link from "next/link";
 import FarmerNavbar from "@/app/components/FarmerNavbar";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { translations } from "@/lib/translations";
 
 // Real data fetched from database
 export default function FarmerDashboard() {
@@ -16,6 +17,14 @@ export default function FarmerDashboard() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState<'en' | 'hi'>('en');
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem("lang") as 'en' | 'hi';
+    if (savedLang) {
+      setLang(savedLang);
+    }
+  }, []);
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -23,11 +32,15 @@ export default function FarmerDashboard() {
       router.push("/login");
     } else {
       const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      fetchListings(parsedUser._id);
-      fetchOrders(parsedUser._id);
-      fetchReviews(parsedUser._id);
-      refreshWallet(parsedUser._id);
+      if (parsedUser.role !== "farmer") {
+        router.push("/");
+      } else {
+        setUser(parsedUser);
+        fetchListings(parsedUser._id);
+        fetchOrders(parsedUser._id);
+        fetchReviews(parsedUser._id);
+        refreshWallet(parsedUser._id);
+      }
     }
   }, [router]);
 
@@ -170,7 +183,10 @@ export default function FarmerDashboard() {
   const generatedAlerts: any[] = [];
 
   listings.forEach(l => {
-    const sold = orders.filter((o: any) => o.listingId?._id === l._id).reduce((acc: number, o: any) => acc + o.quantity, 0);
+    const sold = orders.reduce((acc, o) => {
+      const matchingItems = o.items ? o.items.filter((item: any) => item.productId?._id === l._id) : [];
+      return acc + matchingItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+    }, 0);
     if (sold > 30) {
       generatedAlerts.push({
         id: `suggest_${l._id}`,
@@ -197,35 +213,53 @@ export default function FarmerDashboard() {
               <Tractor size={32} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Welcome, {user.name}</h1>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{translations[lang].fd_welcome}, {user.name}</h1>
               <p className="text-slate-500 font-medium">{user.farmName || "Farmer Dashboard"}</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-2xl transition-all active:scale-95"
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
+          <div className="flex items-center gap-4">
+            {/* Language Toggle */}
+            <div className="flex gap-1 bg-white border border-slate-200 rounded-lg p-1 text-xs font-bold shadow-sm">
+              <button 
+                onClick={() => { setLang('en'); localStorage.setItem('lang', 'en'); }} 
+                className={`px-3 py-1.5 rounded-md transition-all ${lang === 'en' ? 'bg-green-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                English
+              </button>
+              <button 
+                onClick={() => { setLang('hi'); localStorage.setItem('lang', 'hi'); }} 
+                className={`px-3 py-1.5 rounded-md transition-all ${lang === 'hi' ? 'bg-green-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                हिंदी
+              </button>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-2xl transition-all active:scale-95"
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Top Summary Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-green-300 transition-colors cursor-pointer">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Listings</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].fd_activeListings}</span>
             <span className="text-3xl font-black text-slate-900">{listings.filter(l => l.status === 'active').length}</span>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-orange-300 transition-colors cursor-pointer">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Orders</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].fd_totalOrders}</span>
             <span className="text-3xl font-black text-slate-900">{orders.length}</span>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-blue-300 transition-colors cursor-pointer">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Wallet Balance</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].fd_walletBalance}</span>
             <span className="text-3xl font-black text-blue-600">₹{user.walletBalance || 0}</span>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-yellow-300 transition-colors cursor-pointer">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Avg Rating</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].fd_avgRating}</span>
             <span className="text-3xl font-black text-yellow-500 flex items-center gap-1">
               {reviews.length > 0 
                 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
@@ -243,15 +277,15 @@ export default function FarmerDashboard() {
             <div className="grid grid-cols-3 gap-4">
               <Link href="/farmer" className="bg-green-600 hover:bg-green-700 text-white rounded-2xl p-6 flex flex-col items-center justify-center gap-2 transition-all hover:-translate-y-1 shadow-lg shadow-green-600/20 active:scale-95">
                 <Plus size={28} />
-                <span className="font-bold text-sm">Upload Crop</span>
+                <span className="font-bold text-sm">{translations[lang].fd_uploadCrop}</span>
               </Link>
               <Link href="/farmer/ugly-sell" className="bg-orange-500 hover:bg-orange-600 text-white rounded-2xl p-6 flex flex-col items-center justify-center gap-2 transition-all hover:-translate-y-1 shadow-lg shadow-orange-500/20 active:scale-95">
                 <Package size={28} />
-                <span className="font-bold text-sm">Ugly Sell</span>
+                <span className="font-bold text-sm">{translations[lang].fd_uglySell}</span>
               </Link>
               <Link href="/farmer/pre-list" className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl p-6 flex flex-col items-center justify-center gap-2 transition-all hover:-translate-y-1 shadow-lg shadow-blue-600/20 active:scale-95">
                 <Package size={28} />
-                <span className="font-bold text-sm">Pre-list</span>
+                <span className="font-bold text-sm">{translations[lang].fd_preList}</span>
               </Link>
             </div>
 
@@ -260,20 +294,23 @@ export default function FarmerDashboard() {
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
                   <Package className="text-green-600" size={28} />
-                  Your Listings
+                  {translations[lang].fd_yourListings}
                 </h2>
-                <Link href="/farmer" className="text-green-600 text-sm font-black uppercase tracking-widest hover:underline">Add New</Link>
+                <Link href="/farmer" className="text-green-600 text-sm font-black uppercase tracking-widest hover:underline">{translations[lang].fd_addNew}</Link>
               </div>
               
               {listings.length === 0 ? (
                 <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                   <Package size={48} className="mx-auto text-slate-300 mb-4" />
-                  <p className="text-slate-500 font-bold">No listings yet. Start selling today!</p>
+                  <p className="text-slate-500 font-bold">{translations[lang].fd_noListings}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {listings.map((listing) => {
-                    const sold = orders.filter(o => o.listingId?._id === listing._id).reduce((acc, o) => acc + o.quantity, 0);
+                    const sold = orders.reduce((acc, o) => {
+                      const matchingItems = o.items ? o.items.filter((item: any) => item.productId?._id === listing._id) : [];
+                      return acc + matchingItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+                    }, 0);
                     const total = listing.availableQuantityKg + sold;
                     const stockPercentage = total > 0 ? (listing.availableQuantityKg / total) * 100 : 0;
                     
@@ -322,8 +359,8 @@ export default function FarmerDashboard() {
                           {/* Stock Progress */}
                           <div className="mt-3">
                             <div className="flex justify-between text-xs font-bold text-slate-600 mb-1">
-                              <span>Available: {listing.availableQuantityKg}kg</span>
-                              <span>Sold: {sold}kg</span>
+                              <span>{translations[lang].fd_available}: {listing.availableQuantityKg}kg</span>
+                              <span>{translations[lang].fd_sold}: {sold}kg</span>
                             </div>
                             <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                               <div 
@@ -389,31 +426,36 @@ export default function FarmerDashboard() {
 
             {/* Farm Performance Section */}
             <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-              <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">Farm Performance</h2>
+              <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">{translations[lang].fd_farmPerformance}</h2>
               
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">Total Orders</span>
+                  <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">{translations[lang].fd_totalOrders}</span>
                   <span className="font-black text-slate-900">{orders.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">Wallet Balance</span>
+                  <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">{translations[lang].fd_walletBalance}</span>
                   <span className="font-black text-blue-600">₹{user.walletBalance || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">Quantity Sold</span>
-                  <span className="font-black text-slate-900">{orders.reduce((acc, o) => acc + o.quantity, 0)} kg</span>
+                  <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">{translations[lang].fd_quantitySold}</span>
+                  <span className="font-black text-slate-900">
+                    {orders.reduce((acc, o) => {
+                      const farmerItems = o.items ? o.items.filter((item: any) => item.farmerId?._id === user?._id) : [];
+                      return acc + farmerItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+                    }, 0)} kg
+                  </span>
                 </div>
               </div>
               
               <Link href="/farmer/profile" className="block w-full text-center mt-6 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-sm transition-all active:scale-95">
-                View Business Profile
+                {translations[lang].fd_viewProfile}
               </Link>
             </div>
 
             {/* Recent Reviews Section */}
             <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-              <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">Recent Reviews</h2>
+              <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">{translations[lang].fd_recentReviews}</h2>
               
               <div className="space-y-4">
                 {reviews.slice(0, 3).map((review: any) => (
@@ -431,7 +473,7 @@ export default function FarmerDashboard() {
                   </div>
                 ))}
                 {reviews.length === 0 && (
-                  <p className="text-slate-500 font-medium text-center py-4">No reviews yet.</p>
+                  <p className="text-slate-500 font-medium text-center py-4">{translations[lang].fd_noReviews}</p>
                 )}
               </div>
             </div>

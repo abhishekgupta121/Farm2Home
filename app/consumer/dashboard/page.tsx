@@ -12,6 +12,7 @@ import FilterDrawer from "@/app/components/FilterDrawer";
 import FilterChips from "@/app/components/FilterChips";
 import ProductSkeleton from "@/app/components/ProductSkeleton";
 import toast from "react-hot-toast";
+import { translations } from "@/lib/translations";
 
 const formatAddress = (addr: any, pinCode: string, fallback: string) => {
   if (!addr) return fallback || pinCode;
@@ -195,6 +196,14 @@ function DashboardContent() {
   const [user, setUser] = useState<any>(null);
   const [crops, setCrops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState<'en' | 'hi'>('en');
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem("lang") as 'en' | 'hi';
+    if (savedLang) {
+      setLang(savedLang);
+    }
+  }, []);
   const [totalProducts, setTotalProducts] = useState(0);
   const [orders, setOrders] = useState<any[]>([]);
   
@@ -204,6 +213,7 @@ function DashboardContent() {
   // Parse filters from URL
   const currentFilters = {
     category: searchParams.get("category") ? searchParams.get("category")?.split(",") : [],
+    subCategory: searchParams.get("subCategory") ? searchParams.get("subCategory")?.split(",") : [],
     listingType: searchParams.get("listingType") ? searchParams.get("listingType")?.split(",") : [],
     location: searchParams.get("location") || "",
     search: searchParams.get("search") || "",
@@ -217,13 +227,17 @@ function DashboardContent() {
       router.push("/login");
     } else {
       const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      // Fetch crops based on url params OR default to user pinCode if no location specified
-      fetchCrops(parsedUser.pinCode);
-      // Refresh wallet balance from DB
-      refreshWallet(parsedUser._id);
-      // Fetch order history
-      fetchOrders(parsedUser._id);
+      if (parsedUser.role !== "consumer") {
+        router.push("/");
+      } else {
+        setUser(parsedUser);
+        // Fetch crops based on url params OR default to user pinCode if no location specified
+        fetchCrops(parsedUser.pinCode);
+        // Refresh wallet balance from DB
+        refreshWallet(parsedUser._id);
+        // Fetch order history
+        fetchOrders(parsedUser._id);
+      }
     }
   }, [searchParams]); // Re-fetch when URL changes
 
@@ -328,6 +342,7 @@ function DashboardContent() {
     const params = new URLSearchParams();
     
     if (newFilters.category?.length > 0) params.set("category", newFilters.category.join(","));
+    if (newFilters.subCategory?.length > 0) params.set("subCategory", newFilters.subCategory.join(","));
     if (newFilters.listingType?.length > 0) params.set("listingType", newFilters.listingType.join(","));
     if (newFilters.location) params.set("location", newFilters.location);
     if (newFilters.search) params.set("search", newFilters.search);
@@ -344,6 +359,8 @@ function DashboardContent() {
     const newFilters = { ...currentFilters };
     if (key === "category" && value) {
       newFilters.category = (newFilters.category || []).filter((c: string) => c !== value);
+    } else if (key === "subCategory" && value) {
+      newFilters.subCategory = (newFilters.subCategory || []).filter((c: string) => c !== value);
     } else if (key === "listingType" && value) {
       newFilters.listingType = (newFilters.listingType || []).filter((t: string) => t !== value);
     } else {
@@ -443,7 +460,7 @@ function DashboardContent() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">Digital Wallet</p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">{translations[lang].cd_digitalWallet}</p>
                 <p className="text-sm font-black leading-none">₹{user.walletBalance || 0}</p>
               </div>
             </div>
@@ -453,7 +470,7 @@ function DashboardContent() {
               className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm active:scale-95"
             >
               <ShoppingBag size={18} className="text-orange-500" />
-              My Orders
+              {translations[lang].cd_myOrders}
             </button>
 
             <Link href="/cart" className="relative p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-orange-50 hover:text-orange-600 transition-colors">
@@ -462,6 +479,23 @@ function DashboardContent() {
                 <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">{totalItems}</span>
               )}
             </Link>
+
+            {/* Language Toggle */}
+            <div className="flex gap-1 bg-white border border-slate-200 rounded-lg p-1 text-xs font-bold shadow-sm">
+              <button 
+                onClick={() => { setLang('en'); localStorage.setItem('lang', 'en'); }} 
+                className={`px-3 py-1.5 rounded-md transition-all ${lang === 'en' ? 'bg-orange-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                English
+              </button>
+              <button 
+                onClick={() => { setLang('hi'); localStorage.setItem('lang', 'hi'); }} 
+                className={`px-3 py-1.5 rounded-md transition-all ${lang === 'hi' ? 'bg-orange-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                हिंदी
+              </button>
+            </div>
+
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-4 sm:px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-2xl transition-all active:scale-95"
@@ -503,21 +537,21 @@ function DashboardContent() {
             {/* Top Bar (Chips & Sort) */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Products</h2>
-                <p className="text-slate-500 font-bold text-sm uppercase tracking-widest mt-1">Showing {totalProducts} results</p>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">{translations[lang].cd_products}</h2>
+                <p className="text-slate-500 font-bold text-sm uppercase tracking-widest mt-1">{translations[lang].cd_showingResults.replace('{totalProducts}', totalProducts.toString())}</p>
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
-                <span className="text-sm font-bold text-slate-500 whitespace-nowrap">Sort by:</span>
+                <span className="text-sm font-bold text-slate-500 whitespace-nowrap">{translations[lang].cd_sortBy}</span>
                 <select 
                   value={currentFilters.sort}
                   onChange={handleSortChange}
                   className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-orange-500 cursor-pointer w-full sm:w-auto"
                 >
-                  <option value="newest">Newest First</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                  <option value="popular">Most Popular</option>
+                  <option value="newest">{translations[lang].cd_newest}</option>
+                  <option value="price_asc">{translations[lang].cd_priceAsc}</option>
+                  <option value="price_desc">{translations[lang].cd_priceDesc}</option>
+                  <option value="popular">{translations[lang].cd_popular}</option>
                 </select>
               </div>
             </div>
@@ -539,13 +573,13 @@ function DashboardContent() {
                 <div className="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Search size={48} className="text-slate-300" />
                 </div>
-                <h4 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">No products found</h4>
-                <p className="text-slate-500 font-medium max-w-md mx-auto">Try adjusting your filters, searching for something else, or clearing all filters.</p>
+                <h4 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">{translations[lang].cd_noProducts}</h4>
+                <p className="text-slate-500 font-medium max-w-md mx-auto">{translations[lang].cd_noProductsDesc}</p>
                 <button 
                   onClick={clearAllFilters}
                   className="mt-8 px-8 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20"
                 >
-                  Clear All Filters
+                  {translations[lang].cd_clearAllFilters}
                 </button>
               </div>
             ) : (
@@ -592,9 +626,9 @@ function DashboardContent() {
               <div>
                 <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                   <ShoppingBag className="text-orange-500" size={32} />
-                  My Order History
+                  {translations[lang].cd_orderHistory}
                 </h2>
-                <p className="text-slate-500 font-bold">Track and manage your recent purchases</p>
+                <p className="text-slate-500 font-bold">{translations[lang].cd_orderHistoryDesc}</p>
               </div>
               <div className="flex items-center gap-3">
                 <button 
@@ -618,8 +652,8 @@ function DashboardContent() {
               {orders.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-[2rem] border border-dashed border-slate-200">
                   <ShoppingBag className="mx-auto text-slate-200 mb-6" size={80} />
-                  <h3 className="text-2xl font-black text-slate-900 mb-2">No orders found</h3>
-                  <p className="text-slate-500 font-bold max-w-xs mx-auto">Start shopping to see your fresh produce history here!</p>
+                  <h3 className="text-2xl font-black text-slate-900 mb-2">{translations[lang].cd_noOrders}</h3>
+                  <p className="text-slate-500 font-bold max-w-xs mx-auto">{translations[lang].cd_noOrdersDesc}</p>
                 </div>
               ) : (
                 orders.map((order) => (
@@ -630,7 +664,7 @@ function DashboardContent() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-3 mb-2">
                           <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black tracking-widest uppercase">
-                            ORDER #{order._id.slice(-8).toUpperCase()}
+                            {translations[lang].cd_orderId}{order._id.slice(-8).toUpperCase()}
                           </span>
                           <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
                             order.orderStatus === 'placed' ? 'bg-blue-50 text-blue-600 border-blue-100' :
