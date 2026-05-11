@@ -92,8 +92,8 @@ export default function ConsumerSignupPage() {
         throw new Error(data.error || "Failed to register");
       }
 
-      // Save user to local storage
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // Save user to session storage
+      sessionStorage.setItem("user", JSON.stringify(data.user));
       
       // Redirect to dashboard
       router.push("/consumer/dashboard");

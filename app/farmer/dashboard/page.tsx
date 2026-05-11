@@ -21,7 +21,7 @@ export default function FarmerDashboard() {
 
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = sessionStorage.getItem("user");
     if (!userData) {
       router.push("/login");
     } else {
@@ -66,7 +66,7 @@ export default function FarmerDashboard() {
       if (res.ok) {
         setUser((prev: any) => {
           const updated = { ...prev, walletBalance: data.walletBalance };
-          localStorage.setItem("user", JSON.stringify(updated));
+          sessionStorage.setItem("user", JSON.stringify(updated));
           return updated;
         });
       }
@@ -177,8 +177,8 @@ export default function FarmerDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("userRole");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("userRole");
     router.push("/");
   };
 

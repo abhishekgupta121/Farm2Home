@@ -220,7 +220,7 @@ function DashboardContent() {
   };
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = sessionStorage.getItem("user");
     if (!userData) {
       router.push("/login");
     } else {
@@ -245,7 +245,7 @@ function DashboardContent() {
       const balance = res.data.walletBalance;
       setUser((prev: any) => {
         const updated = { ...prev, walletBalance: balance };
-        localStorage.setItem("user", JSON.stringify(updated));
+        sessionStorage.setItem("user", JSON.stringify(updated));
         return updated;
       });
     } catch (err) {
@@ -330,8 +330,8 @@ function DashboardContent() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("userRole");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("userRole");
     router.push("/");
   };
 

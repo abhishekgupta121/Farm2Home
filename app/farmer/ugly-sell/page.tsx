@@ -18,6 +18,7 @@ export default function UglySellPage() {
     category: "pulses",
     subCategory: "",
     pricePerKg: "",
+    originalPrice: "",
     availableQuantityKg: "",
     harvestDate: new Date().toISOString().split('T')[0],
     description: "Slightly imperfect but perfectly edible produce.",
@@ -35,7 +36,7 @@ export default function UglySellPage() {
   ];
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = sessionStorage.getItem("user");
     if (!userData) {
       router.push("/login");
     } else {
@@ -98,6 +99,7 @@ export default function UglySellPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          category: ["wheat", "rice"].includes(formData.category) ? "grain" : formData.category,
           cropName: formData.cropName || formData.subCategory || formData.category,
           farmerId: user._id,
           farmerName: user.name,
@@ -308,6 +310,22 @@ export default function UglySellPage() {
                   </select>
                 </div>
               )}
+
+              <div>
+                <label htmlFor="originalPrice" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                  Original Price (₹/kg)
+                </label>
+                <input
+                  type="number"
+                  id="originalPrice"
+                  name="originalPrice"
+                  value={formData.originalPrice}
+                  onChange={handleChange}
+                  className="block w-full rounded-2xl border-orange-100 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all shadow-sm"
+                  placeholder="0.00"
+                  min="1"
+                />
+              </div>
 
               <div>
                 <label htmlFor="pricePerKg" className="block text-sm font-bold text-slate-700 mb-2 ml-1">

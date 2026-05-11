@@ -50,7 +50,7 @@ export default function FarmerNavbar() {
   const farmerMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = sessionStorage.getItem("user");
     if (userData) {
       try {
         setUser(JSON.parse(userData));
@@ -76,8 +76,8 @@ export default function FarmerNavbar() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("userRole");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("userRole");
     router.push("/");
   };
 

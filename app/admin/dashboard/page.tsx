@@ -27,7 +27,7 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = sessionStorage.getItem("user");
     if (!userData) {
       router.push("/login");
     } else {
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         setUser((prev: any) => {
           const updated = { ...prev, walletBalance: data.walletBalance };
-          localStorage.setItem("user", JSON.stringify(updated));
+          sessionStorage.setItem("user", JSON.stringify(updated));
           return updated;
         });
       }
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
     router.push("/");
   };
 
@@ -276,7 +276,7 @@ export default function AdminDashboard() {
       <div className="p-4 sm:p-8 max-w-[1400px] mx-auto space-y-8">
         {/* Summary Stats & Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_pendingDelivery}</p>
               <h3 className="text-2xl font-black text-slate-900">{orders.filter(o => o.orderStatus === 'placed').length} {translations[lang].ad_ordersCount}</h3>
@@ -289,21 +289,6 @@ export default function AdminDashboard() {
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_refundedCancelled}</p>
               <h3 className="text-2xl font-black text-red-500">{orders.filter(o => o.orderStatus === 'cancelled').length} {translations[lang].ad_ordersCount}</h3>
             </div>
-          </div>
-          
-          <div className="lg:col-span-1">
-            <Link 
-              href="/delivery" 
-              className="group h-full bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-3xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-1 shadow-xl shadow-blue-600/20 active:scale-95"
-            >
-              <div className="bg-white/20 p-3 rounded-2xl group-hover:rotate-12 transition-transform">
-                <Truck size={28} />
-              </div>
-              <div className="text-center">
-                <span className="font-black text-sm uppercase tracking-widest block">Delivery Portal</span>
-                <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">Verify Handover</span>
-              </div>
-            </Link>
           </div>
         </div>
 

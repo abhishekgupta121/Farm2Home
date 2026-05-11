@@ -10,7 +10,7 @@ export default function FarmerProfilePage() {
   const [reviews, setReviews] = useState<any[]>([]);
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = sessionStorage.getItem("user");
     if (!userData) {
       // Demo user if none exists
       const demoUser = { _id: "demo_farmer", name: "Raju Farmer", farmName: "Green Valley Farms", mobileNumber: "9876543210" };
@@ -60,7 +60,7 @@ export default function FarmerProfilePage() {
         const base64 = reader.result as string;
         const updatedUser = { ...user, profileImage: base64 };
         setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+        sessionStorage.setItem("user", JSON.stringify(updatedUser));
       };
       reader.readAsDataURL(file);
     }
@@ -87,7 +87,7 @@ export default function FarmerProfilePage() {
         const base64 = reader.result as string;
         const updatedUser = { ...user, farmBanner: base64 };
         setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+        sessionStorage.setItem("user", JSON.stringify(updatedUser));
       };
       reader.readAsDataURL(file);
     }
@@ -105,7 +105,7 @@ export default function FarmerProfilePage() {
         
         const updatedUser = { ...user, galleryImages: updatedGallery };
         setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+        sessionStorage.setItem("user", JSON.stringify(updatedUser));
       };
       reader.readAsDataURL(file);
     }

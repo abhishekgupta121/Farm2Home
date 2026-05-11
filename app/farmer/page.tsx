@@ -39,7 +39,7 @@ export default function FarmerHomePage() {
   ];
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = sessionStorage.getItem("user");
     if (!userData) {
       router.push("/login");
     } else {
@@ -112,6 +112,7 @@ export default function FarmerHomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          category: ["wheat", "rice"].includes(formData.category) ? "grain" : formData.category,
           cropName: formData.cropName || formData.subCategory || formData.category,
           farmerId: user._id,
           farmerName: user.name,

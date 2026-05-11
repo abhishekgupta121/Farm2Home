@@ -38,9 +38,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       "Content-Type": "application/json",
     };
     
-    // In a real app we'd get the JWT from cookies/localStorage. 
-    // Here we pass the x-user-id header as fallback since login relies on localStorage
-    const userStr = localStorage.getItem("user");
+    // In a real app we'd get the JWT from cookies/sessionStorage. 
+    // Here we pass the x-user-id header as fallback since login relies on sessionStorage
+    const userStr = sessionStorage.getItem("user");
     if (userStr) {
       try {
         const user = JSON.parse(userStr);

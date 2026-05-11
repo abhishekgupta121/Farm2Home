@@ -14,6 +14,7 @@ export interface ICrop extends mongoose.Document {
   subCategory?: string;
   listingType: "standard" | "ugly-sell" | "pre-list";
   pricePerKg: number;
+  originalPrice?: number;
   availableQuantityKg: number;
   description: string;
   harvestDate: Date;
@@ -55,6 +56,7 @@ const CropSchema = new mongoose.Schema<ICrop>(
       default: "standard",
     },
     pricePerKg: { type: Number, required: true, min: 0 },
+    originalPrice: { type: Number, min: 0 },
     availableQuantityKg: { type: Number, required: true, min: 0 },
     description: { type: String, default: "" },
     harvestDate: { type: Date, required: true },

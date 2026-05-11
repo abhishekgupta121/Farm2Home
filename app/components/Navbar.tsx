@@ -17,15 +17,15 @@ const Navbar = () => {
   const [userRole, setUserRole] = useState<'farmer' | 'consumer' | null>(null);
 
   useEffect(() => {
-    // Sync with localStorage on load
-    const savedUser = localStorage.getItem("user");
+    // Sync with sessionStorage on load
+    const savedUser = sessionStorage.getItem("user");
     if (savedUser) {
       try {
         const parsed = JSON.parse(savedUser);
         if (parsed.role) setUserRole(parsed.role);
       } catch (e) {}
     } else {
-      const savedRole = localStorage.getItem("userRole");
+      const savedRole = sessionStorage.getItem("userRole");
       if (savedRole === 'farmer' || savedRole === 'consumer') {
         setUserRole(savedRole);
       }
@@ -35,15 +35,15 @@ const Navbar = () => {
   const handleRoleChange = (role: 'farmer' | 'consumer' | null) => {
     setUserRole(role);
     if (role) {
-      localStorage.setItem("userRole", role);
+      sessionStorage.setItem("userRole", role);
       // For Demo: Create a mock user if one doesn't exist
       const mockUser = role === 'farmer' 
         ? { _id: "65f1a2b3c4d5e6f7a8b9c0d1", name: "Raju Farmer (Demo)", role: "farmer", pinCode: "462001", farmName: "Green Valley Farms", mobileNumber: "9876543210" }
         : { _id: "65f1a2b3c4d5e6f7a8b9c0d2", name: "Suresh Consumer (Demo)", role: "consumer", pinCode: "462001", mobileNumber: "9123456780" };
-      localStorage.setItem("user", JSON.stringify(mockUser));
+      sessionStorage.setItem("user", JSON.stringify(mockUser));
     } else {
-      localStorage.removeItem("userRole");
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("userRole");
+      sessionStorage.removeItem("user");
     }
   };
 

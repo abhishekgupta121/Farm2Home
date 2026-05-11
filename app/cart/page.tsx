@@ -111,12 +111,12 @@ export default function CartPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderResult, setOrderResult] = useState<any>(null);
-  const [deliveryMethod, setDeliveryMethod] = useState("standard");
+  const [deliveryMethod, setDeliveryMethod] = useState("home_delivery");
   const [deliveryCharge, setDeliveryCharge] = useState(0);
 
   // Auth check
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = sessionStorage.getItem("user");
     if (!userData) {
       toast.error("Please login to view your cart");
       router.push("/login");
@@ -166,7 +166,7 @@ export default function CartPage() {
       
       // Update local user wallet balance
       const updatedUser = { ...user, walletBalance: data.newBalance };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      sessionStorage.setItem("user", JSON.stringify(updatedUser));
       setUser(updatedUser);
 
       setOrderResult(data.order);

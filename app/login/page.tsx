@@ -34,12 +34,14 @@ export default function LoginPage() {
         throw new Error(data.error || "Failed to login");
       }
 
-      localStorage.setItem("user", JSON.stringify(data.user));
+      sessionStorage.setItem("user", JSON.stringify(data.user));
       
       if (data.user.role === "farmer") {
         router.push("/farmer/dashboard");
       } else if (data.user.role === "admin") {
         router.push("/admin/dashboard");
+      } else if (data.user.role === "delivery") {
+        router.push("/delivery");
       } else {
         router.push("/consumer/dashboard");
       }

@@ -50,7 +50,7 @@ export default function HomePage() {
   ];
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    const user = sessionStorage.getItem("user");
     if (user) {
       const parsedUser = JSON.parse(user);
       if (parsedUser.role === "farmer") router.push("/farmer/dashboard");
