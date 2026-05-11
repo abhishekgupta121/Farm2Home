@@ -29,9 +29,11 @@ export async function DELETE(
     }
 
     const initialLength = cart.items.length;
-    cart.items = cart.items.filter(
-      (item: any) => item.productId.toString() !== productId
-    );
+    cart.items = cart.items.filter((item: any) => {
+      // Handle both populated and unpopulated productId
+      const currentId = item.productId._id ? item.productId._id.toString() : item.productId.toString();
+      return currentId !== productId;
+    });
 
     if (cart.items.length === initialLength) {
       return NextResponse.json({ error: "Item not found in cart" }, { status: 404 });

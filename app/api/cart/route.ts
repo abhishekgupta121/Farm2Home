@@ -48,6 +48,14 @@ export async function GET(req: Request) {
       return NextResponse.json({ items: [] }, { status: 200 });
     }
 
+    // Auto-remove items where the product has been deleted (productId is null after population)
+    const initialLength = cart.items.length;
+    cart.items = cart.items.filter((item: any) => item.productId !== null);
+    
+    if (cart.items.length !== initialLength) {
+      await cart.save();
+    }
+
     return NextResponse.json({ cart }, { status: 200 });
   } catch (error: any) {
     console.error("Cart GET error:", error);

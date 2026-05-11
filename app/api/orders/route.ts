@@ -27,16 +27,16 @@ export async function GET(req: Request) {
     if (isAdmin) {
       filter = {}; // Admin sees all
     } else if (farmerId && mongoose.Types.ObjectId.isValid(farmerId)) {
-      filter = { "items.farmerId": farmerId };
+      filter = { "items.farmerId": new mongoose.Types.ObjectId(farmerId) };
     } else if (queryConsumerId && mongoose.Types.ObjectId.isValid(queryConsumerId)) {
-      filter = { consumerId: queryConsumerId };
+      filter = { consumerId: new mongoose.Types.ObjectId(queryConsumerId) };
     } else {
       return NextResponse.json({ error: "Valid ID is required" }, { status: 400 });
     }
 
     const orders = await Order.find(filter)
       .populate("items.productId", "cropName pricePerKg")
-      .populate("items.farmerId", "name address mobileNumber")
+      .populate("items.farmerId", "name farmName address mobileNumber")
       .populate("consumerId", "name address mobileNumber pinCode")
       .sort({ createdAt: -1 });
 
@@ -89,20 +89,26 @@ export async function POST(req: Request) {
       });
     }
 
+    // Generate OTPs
+    const farmerOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const consumerOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
     // 3. Create the Order
     const newOrder = await Order.create({
       consumerId: userId,
-      items: items.map((item: any) => ({
+      items: items.filter((item: any) => item.productId).map((item: any) => ({
         productId: item.productId._id,
-        cropName: item.productId.cropName,
+        cropName: item.productId.cropName || "Unknown Crop",
         quantity: item.quantity,
-        pricePerKg: item.productId.pricePerKg,
-        total: item.productId.pricePerKg * item.quantity,
+        pricePerKg: item.productId.pricePerKg || 0,
+        total: (item.productId.pricePerKg || 0) * item.quantity,
         farmerId: item.productId.farmerId,
       })),
       totalAmount,
       paymentStatus: "paid", // Paid to admin (escrow)
       orderStatus: "placed",
+      farmerOtp,
+      consumerOtp,
     });
 
     // 4. Create Deliveries for each item
@@ -138,9 +144,11 @@ export async function POST(req: Request) {
 
     // 6. Update Crop Quantities (Deduct stock)
     for (const item of items) {
+      if (item.productId && item.productId._id) {
         await Crop.findByIdAndUpdate(item.productId._id, {
             $inc: { availableQuantityKg: -item.quantity }
         });
+      }
     }
 
     // 7. Clear User's Cart

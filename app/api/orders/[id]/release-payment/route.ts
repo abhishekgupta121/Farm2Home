@@ -17,7 +17,7 @@ export async function POST(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    if (order.orderStatus === "delivered" || order.paymentStatus === "transferred_to_farmer") {
+    if (order.paymentStatus === "transferred_to_farmer") {
       return NextResponse.json({ error: "Payment already released" }, { status: 400 });
     }
 

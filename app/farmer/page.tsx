@@ -87,6 +87,7 @@ export default function FarmerHomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          cropName: formData.cropName || formData.subCategory || formData.category,
           farmerId: user._id,
           farmerName: user.name,
           farmName: user.farmName,
@@ -147,22 +148,7 @@ export default function FarmerHomePage() {
 
             <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
               <div className="grid grid-cols-1 gap-y-8 gap-x-6 sm:grid-cols-2">
-                {/* Crop Name */}
-                <div className="sm:col-span-2">
-                  <label htmlFor="cropName" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
-                    {t('cropName')}
-                  </label>
-                  <input
-                    type="text"
-                    id="cropName"
-                    name="cropName"
-                    value={formData.cropName}
-                    onChange={handleChange}
-                    className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm placeholder:text-slate-400"
-                    placeholder="e.g. Organic Tomatoes"
-                    required
-                  />
-                </div>
+
 
                 {/* Image Upload */}
                 <div className="sm:col-span-2">
@@ -239,10 +225,9 @@ export default function FarmerHomePage() {
                   >
                     <option value="vegetable">{t('vegetables')}</option>
                     <option value="fruit">{t('fruits')}</option>
-                    <option value="grain">{t('grains')}</option>
                     <option value="pulses">{t('pulses')}</option>
-                    <option value="spice">{t('spices')}</option>
-                    <option value="other">{t('other')}</option>
+                    <option value="wheat">Wheat</option>
+                    <option value="rice">Rice</option>
                   </select>
                 </div>
 
@@ -268,24 +253,51 @@ export default function FarmerHomePage() {
                   </div>
                 )}
 
-                {/* Listing Type */}
-                <div>
-                  <label htmlFor="listingType" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
-                    Listing Type
-                  </label>
-                  <select
-                    id="listingType"
-                    name="listingType"
-                    value={formData.listingType}
-                    onChange={handleChange}
-                    className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm"
-                    required
-                  >
-                    <option value="standard">Standard</option>
-                    <option value="ugly-sell">Ugly Sell (Discounted)</option>
-                    <option value="pre-list">Pre-list (Future Harvest)</option>
-                  </select>
-                </div>
+                {/* Sub-category for Vegetables */}
+                {formData.category === "vegetable" && (
+                  <div>
+                    <label htmlFor="subCategory" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                      Sub-category
+                    </label>
+                    <select
+                      id="subCategory"
+                      name="subCategory"
+                      value={formData.subCategory}
+                      onChange={handleChange}
+                      className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm"
+                      required
+                    >
+                      <option value="">Select Vegetable Type</option>
+                      <option value="Potato">Potato</option>
+                      <option value="Onion">Onion</option>
+                      <option value="Garlic">Garlic</option>
+                      <option value="Tomato">Tomato</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Sub-category for Fruits */}
+                {formData.category === "fruit" && (
+                  <div>
+                    <label htmlFor="subCategory" className="block text-sm font-bold text-slate-700 mb-2 ml-1">
+                      Sub-category
+                    </label>
+                    <select
+                      id="subCategory"
+                      name="subCategory"
+                      value={formData.subCategory}
+                      onChange={handleChange}
+                      className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm"
+                      required
+                    >
+                      <option value="">Select Fruit Type</option>
+                      <option value="Mango">Mango</option>
+                      <option value="Apple">Apple</option>
+                    </select>
+                  </div>
+                )}
+
+
 
                 {/* Pincode */}
                 <div>
@@ -377,6 +389,45 @@ export default function FarmerHomePage() {
                     className="block w-full rounded-2xl border-slate-200 px-5 py-4 text-slate-900 bg-slate-50 border focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all shadow-sm"
                     placeholder="Tell buyers about your crop..."
                   ></textarea>
+                </div>
+              </div>
+
+              {/* Farmer Product Listing Disclaimer */}
+              <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 space-y-4 my-8 shadow-sm">
+                <div className="flex items-center gap-2 text-amber-800 font-bold text-lg">
+                  <span className="text-2xl">📢</span>
+                  <h3>Farmer Product Listing Disclaimer</h3>
+                </div>
+                <p className="text-slate-700 text-sm">
+                  By listing your product on the platform, you agree to the following terms:
+                </p>
+                <ul className="list-disc list-inside text-slate-600 text-sm space-y-2">
+                  <li>The product delivered must <strong>exactly match</strong> the details and images uploaded by you at the time of listing.</li>
+                  <li>The quality category selected must be accurate:
+                    <ul className="ml-6 mt-1 list-none space-y-1 text-slate-500 text-xs">
+                      <li>🔹 <strong>Standard</strong> – Good quality as per market standards</li>
+                      <li>🔹 <strong>Ugly</strong> – Visually imperfect but usable produce</li>
+                      <li>🔹 <strong>Pre-List</strong> – Product not yet harvested but expected</li>
+                    </ul>
+                  </li>
+                </ul>
+                <div className="bg-white rounded-2xl p-4 border border-amber-100">
+                  <p className="text-slate-700 text-sm">
+                    If an admin representative visits your location for verification and finds that:
+                  </p>
+                  <ul className="list-disc list-inside text-slate-600 text-sm ml-2 mt-1">
+                    <li>The product does not match the uploaded images/details, or</li>
+                    <li>The quality category is misrepresented</li>
+                  </ul>
+                  <p className="text-red-600 font-bold text-sm mt-2 flex items-center gap-1">
+                    👉 You will be required to pay the admin visit charges.
+                  </p>
+                </div>
+                <div className="bg-green-50 rounded-2xl p-4 border border-green-100 flex items-center gap-2">
+                  <span className="text-green-600">✅</span>
+                  <p className="text-green-800 text-sm font-medium">
+                    If the product is found to be accurate and matches the listing: <strong>No visit charges will be applied (Free verification)</strong>
+                  </p>
                 </div>
               </div>
 

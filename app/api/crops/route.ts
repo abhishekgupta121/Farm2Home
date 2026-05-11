@@ -87,19 +87,10 @@ export async function GET(req: Request) {
     if (inStock === "true") query.availableQuantityKg = { $gt: 0 };
     else if (inStock === "false") query.availableQuantityKg = 0;
 
-    // 7. Search Filter (by cropName or farmerName)
+    // 7. Search Filter (by farmerName)
     const search = searchParams.get("search");
     if (search) {
-      const searchOr = [
-        { cropName: { $regex: search, $options: "i" } },
-        { farmerName: { $regex: search, $options: "i" } }
-      ];
-      if (query.$or) {
-        query.$and = [{ $or: query.$or }, { $or: searchOr }];
-        delete query.$or;
-      } else {
-        query.$or = searchOr;
-      }
+      query.farmerName = { $regex: search, $options: "i" };
     }
 
     // 8. Sorting

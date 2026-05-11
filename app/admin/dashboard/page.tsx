@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, ShieldCheck, CheckCircle, XCircle, Clock, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, Truck, Package } from "lucide-react";
+import { LogOut, ShieldCheck, CheckCircle, XCircle, Clock, Search, Filter, ShoppingBag, Leaf, Tractor, Tag, Truck, Package, X } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
@@ -139,6 +139,25 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleRefund = async (orderId: string) => {
+    if (!confirm("Are you sure you want to refund this order to the consumer? This will return funds and cancel the order.")) return;
+    try {
+      const res = await fetch(`/api/orders/${orderId}/refund`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Order refunded and cancelled!");
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, paymentStatus: "refunded", orderStatus: "cancelled" } : o));
+        if (user) refreshWallet(user._id);
+      } else {
+        toast.error(data.error || "Failed to refund order");
+      }
+    } catch (err) {
+      toast.error("Something went wrong");
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     router.push("/");
@@ -152,7 +171,6 @@ export default function AdminDashboard() {
   };
 
   const filteredCrops = pendingCrops.filter(crop => 
-    crop.cropName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     crop.farmerName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -311,6 +329,22 @@ export default function AdminDashboard() {
           </div>
         ) : activeTab === "orders" ? (
           <div className="space-y-6">
+            {/* Delivery Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending Delivery</p>
+                <h3 className="text-2xl font-black text-slate-900">{orders.filter(o => o.orderStatus === 'placed').length} Orders</h3>
+              </div>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Completed / Paid</p>
+                <h3 className="text-2xl font-black text-green-600">{orders.filter(o => o.paymentStatus === 'transferred_to_farmer').length} Orders</h3>
+              </div>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Refunded / Cancelled</p>
+                <h3 className="text-2xl font-black text-red-500">{orders.filter(o => o.orderStatus === 'cancelled').length} Orders</h3>
+              </div>
+            </div>
+
             {filteredOrders.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
                 <Package size={64} className="mx-auto text-slate-300 mb-6" />
@@ -328,10 +362,22 @@ export default function AdminDashboard() {
                         <span className="px-4 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest">
                           ORDER #{order._id.slice(-8).toUpperCase()}
                         </span>
-                        <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest border ${
-                          order.paymentStatus === 'paid' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-green-50 text-green-600 border-green-200'
+                        <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${
+                          order.orderStatus === 'placed' ? 'bg-orange-50 text-orange-600 border-orange-200' : 
+                          order.orderStatus === 'shipped' ? 'bg-blue-50 text-blue-600 border-blue-200' : 
+                          order.orderStatus === 'delivered' ? 'bg-green-50 text-green-600 border-green-200' :
+                          'bg-slate-100 text-slate-500 border-slate-200'
                         }`}>
-                          {order.paymentStatus === 'paid' ? 'HOLDING IN ESCROW' : 'TRANSFERRED TO FARMER'}
+                          STATUS: {order.orderStatus}
+                        </span>
+                        <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest border ${
+                          order.paymentStatus === 'paid' ? 'bg-amber-50 text-amber-600 border-amber-200' : 
+                          order.paymentStatus === 'refunded' ? 'bg-red-50 text-red-600 border-red-200' :
+                          'bg-green-50 text-green-600 border-green-200'
+                        }`}>
+                          {order.paymentStatus === 'paid' ? 'HOLDING IN ESCROW' : 
+                           order.paymentStatus === 'refunded' ? 'REFUNDED TO CONSUMER' : 
+                           'TRANSFERRED TO FARMER'}
                         </span>
                         <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
                           <Clock size={14} />
@@ -408,6 +454,20 @@ export default function AdminDashboard() {
                           >
                             Release ₹{order.totalAmount}
                           </button>
+                          <button 
+                            onClick={() => handleRefund(order._id)}
+                            className="w-full mt-3 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95"
+                          >
+                            Refund & Cancel
+                          </button>
+                        </div>
+                      ) : order.paymentStatus === "refunded" ? (
+                        <div className="bg-red-50 rounded-3xl p-6 border border-red-100 text-center">
+                          <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <X size={24} />
+                          </div>
+                          <h5 className="font-black text-red-800 mb-1">Order Refunded</h5>
+                          <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Amount Returned</p>
                         </div>
                       ) : (
                         <div className="bg-green-50 rounded-3xl p-6 border border-green-100 text-center">

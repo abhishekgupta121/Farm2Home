@@ -47,9 +47,8 @@ export async function POST(
       });
     }
 
-    // 5. Update Order Status
     order.orderStatus = "cancelled";
-    order.paymentStatus = "pending"; // Reset or mark as refunded
+    order.paymentStatus = "refunded";
 
     await admin.save();
     await consumer.save();
