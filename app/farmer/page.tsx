@@ -65,8 +65,33 @@ export default function FarmerHomePage() {
     }
   };
 
-  const setSampleImage = (url: string) => {
-    setFormData(prev => ({ ...prev, imageUrl: url }));
+  const setSampleImage = (url: string, name: string) => {
+    setFormData(prev => {
+      const updates: any = { imageUrl: url };
+      if (name === "Tomatoes") {
+        updates.category = "vegetable";
+        updates.subCategory = "Tomato";
+      } else if (name === "Potatoes") {
+        updates.category = "vegetable";
+        updates.subCategory = "Potato";
+      } else if (name === "Moong Dal") {
+        updates.category = "pulses";
+        updates.subCategory = "Moong Dal";
+      } else if (name === "Masoor Dal") {
+        updates.category = "pulses";
+        updates.subCategory = "Masoor Dal";
+      } else if (name === "Toor Dal") {
+        updates.category = "pulses";
+        updates.subCategory = "Toor Dal";
+      } else if (name === "Pulses") {
+        updates.category = "pulses";
+        updates.subCategory = "";
+      } else if (name === "Wheat") {
+        updates.category = "wheat";
+        updates.subCategory = "";
+      }
+      return { ...prev, ...updates };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -193,7 +218,7 @@ export default function FarmerHomePage() {
                           <button
                             key={img.url}
                             type="button"
-                            onClick={() => setSampleImage(img.url)}
+                            onClick={() => setSampleImage(img.url, img.name)}
                             className={`flex items-center gap-2 p-2 rounded-xl text-[10px] font-bold transition-all border ${formData.imageUrl === img.url
                                 ? "bg-green-600 text-white border-green-600 shadow-md"
                                 : "bg-white text-slate-600 border-slate-100 hover:border-green-500 hover:text-green-600"

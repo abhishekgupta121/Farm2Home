@@ -45,6 +45,11 @@ export async function GET(req: Request) {
       query.category = { $in: category.split(",") };
     }
 
+    const subCategory = searchParams.get("subCategory");
+    if (subCategory) {
+      query.subCategory = { $in: subCategory.split(",") };
+    }
+
     // 3. Location Filter (Better Search + Partial Pincode Match)
     const location = searchParams.get("location");
     if (location) {
