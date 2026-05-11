@@ -87,10 +87,15 @@ export async function GET(req: Request) {
     if (inStock === "true") query.availableQuantityKg = { $gt: 0 };
     else if (inStock === "false") query.availableQuantityKg = 0;
 
-    // 7. Search Filter (by farmerName)
+    // 7. Search Filter (by cropName or farmerName)
     const search = searchParams.get("search");
     if (search) {
-      query.farmerName = { $regex: search, $options: "i" };
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.$or = [
+        ...(query.$or || []),
+        { cropName: { $regex: escapedSearch, $options: "i" } },
+        { farmerName: { $regex: escapedSearch, $options: "i" } }
+      ];
     }
 
     // 8. Sorting
@@ -115,6 +120,7 @@ export async function GET(req: Request) {
       }
     }, { status: 200 });
   } catch (error: any) {
+    console.error("Fetch crops error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to fetch crops" },
       { status: 500 }
