@@ -74,7 +74,7 @@ export default function FarmerOrdersPage() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black tracking-widest uppercase">
-                          ORDER #{order._id.slice(-8).toUpperCase()}
+                          ORDER #{order._id}
                         </span>
                         <span className="text-slate-300">|</span>
                         <span className="text-sm font-bold text-slate-900">{order.consumerId?.name || "Test Consumer"}</span>

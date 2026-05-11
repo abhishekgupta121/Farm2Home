@@ -55,6 +55,7 @@ export default function HomePage() {
     if (user) {
       const parsedUser = JSON.parse(user);
       if (parsedUser.role === "farmer") router.push("/farmer/dashboard");
+      else if (parsedUser.role === "admin") router.push("/admin/dashboard");
       else router.push("/consumer/dashboard");
     }
   }, [router]);

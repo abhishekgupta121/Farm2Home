@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/lib/models/Order";
+import User from "@/lib/models/User";
 
 export async function POST(req: Request) {
   try {
@@ -45,8 +46,34 @@ export async function POST(req: Request) {
       }
       
       order.orderStatus = "shipped";
+      
+      // RELEASE PAYMENT TO FARMER INSTANTLY AT PICKUP
+      try {
+        const admin = await User.findOne({ role: "admin" });
+        if (admin) {
+          for (const item of order.items) {
+            const farmer = await User.findById(item.farmerId);
+            if (farmer) {
+              // Transfer from Admin to Farmer
+              admin.walletBalance -= item.total;
+              farmer.walletBalance += item.total;
+              await farmer.save();
+            }
+          }
+          await admin.save();
+          order.paymentStatus = "transferred_to_farmer";
+          console.log(`Payment released for order ${order._id} at pickup`);
+        } else {
+          console.error("Admin account not found for payment release at pickup");
+        }
+      } catch (payError) {
+        console.error("Error releasing payment at pickup:", payError);
+        // We continue anyway as the status update is the primary goal, 
+        // but the payment release failure is logged.
+      }
+
       await order.save();
-      return NextResponse.json({ message: "Pickup verified successfully! Order is now shipped." }, { status: 200 });
+      return NextResponse.json({ message: "Pickup verified successfully! Order is now shipped and payment released to farmer." }, { status: 200 });
     }
 
     if (type === "delivery") {

@@ -15,7 +15,7 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"crops" | "orders" | "deliveries">("crops");
+  const [activeTab, setActiveTab] = useState<"crops" | "orders">("crops");
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -270,12 +270,6 @@ export default function AdminDashboard() {
           >
             {translations[lang].ad_orderManagement} ({orders.length})
           </button>
-          <button 
-            onClick={() => setActiveTab("deliveries")}
-            className={`px-8 py-4 font-black text-sm uppercase tracking-widest transition-all border-b-4 flex-shrink-0 ${activeTab === "deliveries" ? "border-blue-500 text-blue-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}
-          >
-            All Deliveries ({deliveries.length})
-          </button>
         </div>
       </div>
 
@@ -403,7 +397,7 @@ export default function AdminDashboard() {
                     <div className="flex-1 space-y-6">
                       <div className="flex flex-wrap items-center gap-4">
                         <span className="px-4 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest">
-                          {translations[lang].ad_orderId}{order._id.slice(-8).toUpperCase()}
+                          ID: {order._id}
                         </span>
                         <span className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${
                           order.orderStatus === 'placed' ? 'bg-orange-50 text-orange-600 border-orange-200' : 
@@ -475,6 +469,7 @@ export default function AdminDashboard() {
                               <div className="text-left sm:text-right border-l sm:border-l-0 sm:border-r border-slate-100 pl-4 sm:pl-0 sm:pr-4">
                                 <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Farmer</p>
                                 <p className="text-xs font-black text-slate-900">{item.farmerId?.name || "N/A"}</p>
+                                <p className="text-[10px] font-bold text-slate-700">Contact: {item.farmerId?.mobileNumber || "N/A"}</p>
                                 <p className="text-[10px] font-medium text-slate-500">{formatAddress(item.farmerId?.address)}</p>
                               </div>
                             </div>
@@ -527,82 +522,7 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
-                    <th className="p-6">Order Details</th>
-                    <th className="p-6">Farmer / Consumer</th>
-                    <th className="p-6">Method</th>
-                    <th className="p-6">Status</th>
-                    <th className="p-6 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {filteredDeliveries.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-20 text-center">
-                        <Package size={64} className="mx-auto text-slate-200 mb-4" />
-                        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No delivery records matching your search</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredDeliveries.map((d) => (
-                      <tr key={d._id} className="group hover:bg-slate-50/50 transition-colors">
-                        <td className="p-6">
-                          <div className="font-black text-slate-900">{d.cropId?.cropName || "Unknown Crop"}</div>
-                          <div className="text-xs font-bold text-slate-400 mt-1">Ordered on {new Date(d.createdAt).toLocaleDateString()}</div>
-                          <div className="text-[10px] font-black text-slate-300 mt-1 uppercase tracking-tighter">ID: {d._id.slice(-8)}</div>
-                        </td>
-                        <td className="p-6">
-                          <div className="text-sm">
-                            <span className="text-slate-400 font-bold uppercase text-[9px] block mb-1">Farmer</span>
-                            <span className="font-black text-slate-900">{d.farmerId?.name}</span>
-                          </div>
-                          <div className="text-sm mt-3">
-                            <span className="text-slate-400 font-bold uppercase text-[9px] block mb-1">Consumer</span>
-                            <span className="font-black text-slate-900">{d.consumerId?.name}</span>
-                          </div>
-                        </td>
-                        <td className="p-6">
-                          <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600">
-                            {d.method.replace('_', ' ')}
-                          </span>
-                        </td>
-                        <td className="p-6">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                            d.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                            d.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
-                            d.status === 'in_transit' ? 'bg-purple-100 text-purple-700' :
-                            d.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                            'bg-red-100 text-red-700'
-                          }`}>
-                            {d.status.replace('_', ' ')}
-                          </span>
-                        </td>
-                        <td className="p-6 text-right">
-                          <select 
-                            value={d.status}
-                            onChange={(e) => handleUpdateDeliveryStatus(d._id, e.target.value)}
-                            className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-black text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="in_transit">In Transit</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        ) : null}
       </div>
 
     </div>

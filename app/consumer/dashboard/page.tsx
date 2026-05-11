@@ -614,7 +614,10 @@ function DashboardContent() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-3 mb-2">
                           <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black tracking-widest uppercase">
-                            {translations[lang].cd_orderId}{order._id.slice(-8).toUpperCase()}
+                            {translations[lang].cd_orderId}{order._id}
+                          </span>
+                          <span className="px-3 py-1 bg-orange-500 text-white rounded-lg text-[10px] font-black tracking-widest uppercase">
+                            OTP: {order.consumerOtp || "N/A"}
                           </span>
                           <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
                             order.orderStatus === 'placed' ? 'bg-blue-50 text-blue-600 border-blue-100' :

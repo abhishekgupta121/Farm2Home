@@ -320,15 +320,7 @@ export default function FarmerDashboard() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {delivery.status === 'pending' && (
-                              <button onClick={() => handleUpdateDeliveryStatus(delivery._id, 'confirmed')} className="px-4 py-2 bg-green-600 text-white text-[10px] font-black uppercase rounded-xl hover:bg-green-700 transition-all">Confirm</button>
-                            )}
-                            {delivery.status === 'confirmed' && (
-                              <button onClick={() => handleUpdateDeliveryStatus(delivery._id, 'in_transit')} className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase rounded-xl hover:bg-blue-700 transition-all">Ship</button>
-                            )}
-                            {delivery.status === 'in_transit' && (
-                              <button onClick={() => handleUpdateDeliveryStatus(delivery._id, 'delivered')} className="px-4 py-2 bg-slate-900 text-white text-[10px] font-black uppercase rounded-xl hover:bg-slate-800 transition-all">Mark Delivered</button>
-                            )}
+                            {/* Status update buttons removed as per user request */}
                           </div>
                         </div>
                       ))}
@@ -509,7 +501,7 @@ export default function FarmerDashboard() {
                       <div key={order._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-3xl bg-slate-50 border border-slate-100 gap-4 group hover:border-blue-200 transition-all">
                           <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{order._id.substring(0, 8)}</span>
+                              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{order._id}</span>
                               <span className="text-slate-300">|</span>
                               <span className="text-sm font-bold text-slate-900">{order.consumerId?.name || "Consumer"}</span>
                           </div>
@@ -519,6 +511,10 @@ export default function FarmerDashboard() {
                               ))}
                           </div>
                           <p className="text-xs text-slate-400 font-bold mt-1">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                          <div className="mt-2 p-2 bg-orange-50 border border-orange-100 rounded-xl inline-block">
+                              <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Farmer OTP</p>
+                              <p className="font-black text-orange-700 tracking-widest">{order.farmerOtp || "N/A"}</p>
+                          </div>
                           </div>
                           <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                           <span className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
