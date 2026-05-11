@@ -212,7 +212,7 @@ export default function HomePage() {
 
             {/* Right Visual */}
             <div className="lg:col-span-5 relative">
-              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[3.5rem] shadow-2xl border-[12px] border-white/60 glass glare-effect">
+              <div className="relative aspect-square w-full overflow-hidden rounded-[3.5rem] shadow-2xl border-[12px] border-white/60 glass glare-effect">
                 <Image
                   src="/farm2home_hero_visual.png"
                   alt="Farm2Home Hero"
