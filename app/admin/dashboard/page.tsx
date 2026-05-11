@@ -280,6 +280,39 @@ export default function AdminDashboard() {
       </div>
 
       <div className="p-4 sm:p-8 max-w-[1400px] mx-auto space-y-8">
+        {/* Summary Stats & Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_pendingDelivery}</p>
+              <h3 className="text-2xl font-black text-slate-900">{orders.filter(o => o.orderStatus === 'placed').length} {translations[lang].ad_ordersCount}</h3>
+            </div>
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_completedPaid}</p>
+              <h3 className="text-2xl font-black text-green-600">{orders.filter(o => o.paymentStatus === 'transferred_to_farmer').length} {translations[lang].ad_ordersCount}</h3>
+            </div>
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_refundedCancelled}</p>
+              <h3 className="text-2xl font-black text-red-500">{orders.filter(o => o.orderStatus === 'cancelled').length} {translations[lang].ad_ordersCount}</h3>
+            </div>
+          </div>
+          
+          <div className="lg:col-span-1">
+            <Link 
+              href="/delivery" 
+              className="group h-full bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-3xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-1 shadow-xl shadow-blue-600/20 active:scale-95"
+            >
+              <div className="bg-white/20 p-3 rounded-2xl group-hover:rotate-12 transition-transform">
+                <Truck size={28} />
+              </div>
+              <div className="text-center">
+                <span className="font-black text-sm uppercase tracking-widest block">Delivery Portal</span>
+                <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">Verify Handover</span>
+              </div>
+            </Link>
+          </div>
+        </div>
+
         {/* Search Bar */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
           <div className="relative w-full">
@@ -355,22 +388,6 @@ export default function AdminDashboard() {
           </div>
         ) : activeTab === "orders" ? (
           <div className="space-y-6">
-            {/* Delivery Summary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_pendingDelivery}</p>
-                <h3 className="text-2xl font-black text-slate-900">{orders.filter(o => o.orderStatus === 'placed').length} {translations[lang].ad_ordersCount}</h3>
-              </div>
-              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_completedPaid}</p>
-                <h3 className="text-2xl font-black text-green-600">{orders.filter(o => o.paymentStatus === 'transferred_to_farmer').length} {translations[lang].ad_ordersCount}</h3>
-              </div>
-              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{translations[lang].ad_refundedCancelled}</p>
-                <h3 className="text-2xl font-black text-red-500">{orders.filter(o => o.orderStatus === 'cancelled').length} {translations[lang].ad_ordersCount}</h3>
-              </div>
-            </div>
-
             {filteredOrders.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
                 <Package size={64} className="mx-auto text-slate-300 mb-6" />
@@ -587,6 +604,7 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
     </div>
   );
 }
