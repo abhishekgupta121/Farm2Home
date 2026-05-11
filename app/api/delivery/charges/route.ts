@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 const DELIVERY_RATES: Record<string, { charges: number; eta: string; label: string }> = {
   home_delivery: { charges: 40, eta: "24–48 hours", label: "Home Delivery" },
   farm_pickup: { charges: 0, eta: "Flexible (your schedule)", label: "Farm Pickup" },
-  express_delivery: { charges: 100, eta: "Same day", label: "Express Delivery" },
 };
 
 export async function GET(req: Request) {

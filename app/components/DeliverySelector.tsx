@@ -38,17 +38,6 @@ const OPTIONS: DeliveryOption[] = [
     gradient: "from-amber-500 to-orange-500",
     activeRing: "ring-amber-500",
   },
-  {
-    id: "express_delivery",
-    label: "Express Delivery",
-    icon: <Zap size={22} />,
-    description: "Same-day priority delivery for urgent orders",
-    charge: 100,
-    chargeLabel: "₹100",
-    eta: "Same day",
-    gradient: "from-blue-500 to-violet-500",
-    activeRing: "ring-blue-500",
-  },
 ];
 
 interface DeliverySelectorProps {
@@ -87,9 +76,6 @@ export default function DeliverySelector({ selected, onSelect }: DeliverySelecto
                   <span className="font-black text-slate-900">{option.label}</span>
                   {option.id === "farm_pickup" && (
                     <span className="text-[10px] bg-green-100 text-green-700 font-black px-2 py-0.5 rounded-full uppercase tracking-widest">Free</span>
-                  )}
-                  {option.id === "express_delivery" && (
-                    <span className="text-[10px] bg-blue-100 text-blue-700 font-black px-2 py-0.5 rounded-full uppercase tracking-widest">Fastest</span>
                   )}
                 </div>
                 <p className="text-slate-500 text-sm font-medium mt-0.5">{option.description}</p>

@@ -56,25 +56,6 @@ const cards: DeliveryCard[] = [
     charge: "Free",
     eta: "Flexible",
   },
-  {
-    id: "express_delivery",
-    icon: <Zap size={48} strokeWidth={1.5} />,
-    bgGradient: "from-blue-500 to-violet-600",
-    accentColor: "text-blue-600",
-    borderColor: "border-blue-200",
-    glowColor: "shadow-blue-500/20",
-    title: "Express Delivery",
-    subtitle: "Need it today? We've got you",
-    badge: "Fastest",
-    features: [
-      { icon: <Zap size={14} />, text: "Same-day delivery" },
-      { icon: <Star size={14} />, text: "Priority order handling" },
-      { icon: <MapPin size={14} />, text: "Real-time GPS tracking" },
-      { icon: <CheckCircle size={14} />, text: "Dedicated delivery partner" },
-    ],
-    charge: "₹100",
-    eta: "Same day",
-  },
 ];
 
 function FlipCard({ card }: { card: DeliveryCard }) {
@@ -180,7 +161,7 @@ export default function DeliveryFlipCards() {
             We Deliver <span className="text-green-600">Your Way</span>
           </h2>
           <p className="text-slate-500 mt-4 text-lg font-medium max-w-xl mx-auto">
-            Choose how you want to receive your farm-fresh produce. Fast, flexible, and always fresh.
+            Choose how you want to receive your farm-fresh produce. Reliable, flexible, and always fresh.
           </p>
           <p className="text-slate-400 text-sm mt-2 font-bold">✨ Hover over a card to see details</p>
         </div>

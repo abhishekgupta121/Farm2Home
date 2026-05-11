@@ -28,15 +28,15 @@ const farmerLinks = [
   { name: "Ugly Sell", href: "/farmer/ugly-sell", icon: Star },
   { name: "Pre-list", href: "/farmer/pre-list", icon: CalendarClock },
   { name: "Dashboard", href: "/farmer/dashboard", icon: LayoutDashboard },
-  { name: "Orders", href: "/farmer/orders", icon: ShoppingBag },
   { name: "Wallet", href: "/farmer/wallet", icon: Wallet },
   { name: "Profile", href: "/farmer/profile", icon: User },
 ];
 
 const publicLinks = [
   { name: "Features", href: "/features", icon: ShoppingBag },
-  { name: "Market Prices", href: "/market-prices", icon: TrendingUp },
-  { name: "Contact", href: "/contact", icon: PhoneCall },
+  {"name": "Market Prices", "href": "/market-prices", "icon": TrendingUp},
+  {"name": "My Orders", "href": "/farmer/orders", "icon": ShoppingBag},
+  {"name": "Contact", "href": "/contact", "icon": PhoneCall},
 ];
 
 export default function FarmerNavbar() {

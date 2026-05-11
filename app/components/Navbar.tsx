@@ -61,6 +61,7 @@ const Navbar = () => {
       { name: 'Ugly Sell', href: '/farmer/ugly-sell' },
       { name: 'Pre-list', href: '/farmer/pre-list' },
       { name: 'Dashboard', href: '/farmer/dashboard' },
+      { name: 'My Orders', href: '/farmer/orders' },
       { name: 'Profile', href: '/farmer/profile' },
     ],
     consumer: [

@@ -79,7 +79,15 @@ export default function FarmerOrdersPage() {
                         <span className="text-slate-300">|</span>
                         <span className="text-sm font-bold text-slate-900">{order.consumerId?.name || "Test Consumer"}</span>
                       </div>
-                      <p className="text-slate-700 font-medium">{order.quantity}kg of <span className="font-bold text-slate-900">{order.listingId?.cropName || "Unknown Crop"}</span> — <span className="text-green-600 font-bold">₹{order.totalPrice}</span></p>
+                      <div className="space-y-1">
+                        {order.items
+                          .filter((item: any) => item.farmerId === user._id || item.farmerId?._id === user._id)
+                          .map((item: any, idx: number) => (
+                            <p key={idx} className="text-slate-700 font-medium">
+                              {item.quantity}kg of <span className="font-bold text-slate-900">{item.cropName || item.productId?.cropName}</span> — <span className="text-green-600 font-bold">₹{item.total}</span>
+                            </p>
+                          ))}
+                      </div>
                       <p className="text-xs text-slate-400 font-bold mt-1">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
@@ -94,6 +102,15 @@ export default function FarmerOrdersPage() {
                         'bg-slate-200 text-slate-600'
                       }`}>
                         {order.orderStatus}
+                      </span>
+                      <span className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
+                        order.paymentStatus === 'transferred_to_farmer' ? 'bg-green-100 text-green-700' :
+                        order.paymentStatus === 'paid' ? 'bg-amber-100 text-amber-700' :
+                        'bg-slate-200 text-slate-600'
+                      }`}>
+                        {order.paymentStatus === 'transferred_to_farmer' ? 'Paid' : 
+                         order.paymentStatus === 'paid' ? 'Payment Pending' : 
+                         order.paymentStatus.toUpperCase()}
                       </span>
                     </div>
                   </div>

@@ -7,6 +7,7 @@ import Link from "next/link";
 import FarmerNavbar from "@/app/components/FarmerNavbar";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { translations } from "@/lib/translations";
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function FarmerDashboard() {
   const router = useRouter();
@@ -16,14 +17,8 @@ export default function FarmerDashboard() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lang, setLang] = useState<'en' | 'hi'>('en');
+  const { language: lang } = useLanguage();
 
-  useEffect(() => {
-    const savedLang = localStorage.getItem("lang") as 'en' | 'hi';
-    if (savedLang) {
-      setLang(savedLang);
-    }
-  }, []);
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -213,41 +208,6 @@ export default function FarmerDashboard() {
       <div className="p-4 sm:p-8">
         <div className="max-w-6xl mx-auto space-y-6">
           
-          {/* Header Section */}
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="bg-green-100 p-4 rounded-2xl text-green-600">
-                <Tractor size={32} />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{translations[lang].fd_welcome}, {user.name}</h1>
-                <p className="text-slate-500 font-medium">{user.farmName || "Farmer Dashboard"}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex gap-1 bg-white border border-slate-200 rounded-lg p-1 text-xs font-bold shadow-sm">
-                <button 
-                  onClick={() => { setLang('en'); localStorage.setItem('lang', 'en'); }} 
-                  className={`px-3 py-1.5 rounded-md transition-all ${lang === 'en' ? 'bg-green-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-                >
-                  English
-                </button>
-                <button 
-                  onClick={() => { setLang('hi'); localStorage.setItem('lang', 'hi'); }} 
-                  className={`px-3 py-1.5 rounded-md transition-all ${lang === 'hi' ? 'bg-green-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-                >
-                  हिंदी
-                </button>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-2xl transition-all active:scale-95"
-              >
-                <LogOut size={18} />
-                Logout
-              </button>
-            </div>
-          </div>
 
           {/* Top Summary Section */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -484,52 +444,6 @@ export default function FarmerDashboard() {
                 </div>
               </div>
 
-              {/* Recent Orders */}
-              <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-                <div className="flex justify-between items-center mb-8">
-                  <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                    <ShoppingBag className="text-blue-600" size={28} />
-                    Recent Orders
-                  </h2>
-                  <button className="text-blue-600 text-sm font-black uppercase tracking-widest hover:underline">View All</button>
-                </div>
-                <div className="space-y-4">
-                  {orders.length === 0 ? (
-                      <p className="text-slate-500 font-medium text-center py-4">No orders yet.</p>
-                  ) : (
-                      orders.map((order: any) => (
-                      <div key={order._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-3xl bg-slate-50 border border-slate-100 gap-4 group hover:border-blue-200 transition-all">
-                          <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{order._id}</span>
-                              <span className="text-slate-300">|</span>
-                              <span className="text-sm font-bold text-slate-900">{order.consumerId?.name || "Consumer"}</span>
-                          </div>
-                          <div className="space-y-1">
-                              {order.items?.map((item: any, idx: number) => (
-                                  <p key={idx} className="text-slate-700 font-medium">{item.quantity}kg of <span className="font-bold text-slate-900">{item.cropName}</span></p>
-                              ))}
-                          </div>
-                          <p className="text-xs text-slate-400 font-bold mt-1">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
-                          <div className="mt-2 p-2 bg-orange-50 border border-orange-100 rounded-xl inline-block">
-                              <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Farmer OTP</p>
-                              <p className="font-black text-orange-700 tracking-widest">{order.farmerOtp || "N/A"}</p>
-                          </div>
-                          </div>
-                          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                          <span className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
-                              order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' :
-                              order.paymentStatus === 'transferred_to_farmer' ? 'bg-blue-100 text-blue-700' :
-                              'bg-slate-200 text-slate-600'
-                          }`}>
-                              {order.paymentStatus.replace(/_/g, ' ')}
-                          </span>
-                          </div>
-                      </div>
-                      ))
-                  )}
-                </div>
-              </div>
 
             </div>
 

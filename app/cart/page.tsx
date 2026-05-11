@@ -7,7 +7,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import DeliverySelector from "@/app/components/DeliverySelector";
 
 const formatAddress = (addr: any, fallback: string) => {
   if (!addr) return fallback;
@@ -112,8 +111,8 @@ export default function CartPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderResult, setOrderResult] = useState<any>(null);
-  const [deliveryMethod, setDeliveryMethod] = useState("home_delivery");
-  const [deliveryCharge, setDeliveryCharge] = useState(40);
+  const [deliveryMethod, setDeliveryMethod] = useState("standard");
+  const [deliveryCharge, setDeliveryCharge] = useState(0);
 
   // Auth check
   useEffect(() => {
@@ -287,14 +286,6 @@ export default function CartPage() {
                 ))}
               </div>
 
-              {/* Delivery Selector */}
-              <DeliverySelector 
-                selected={deliveryMethod} 
-                onSelect={(method, charge) => {
-                  setDeliveryMethod(method as any);
-                  setDeliveryCharge(charge);
-                }} 
-              />
             </div>
 
             <div className="lg:col-span-1">
