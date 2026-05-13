@@ -243,3 +243,23 @@ Stack: SyntaxError: Bad escaped character in JSON at position 16 (line 1 column 
 2026-05-11T20:23:07.373Z - DB Connected
 2026-05-11T20:23:07.373Z - Parsing request body...
 2026-05-11T20:23:07.376Z - Body parsed: {"mobileNumber":"0000000000","password":"password"}
+2026-05-13T04:28:37.227Z - POST /api/auth/login started
+2026-05-13T04:28:37.231Z - Connecting to DB...
+2026-05-13T04:28:40.644Z - DB Connected
+2026-05-13T04:28:40.646Z - Parsing request body...
+2026-05-13T04:28:40.796Z - Body parsed: {"mobileNumber":"1111111111","password":"111111"}
+2026-05-13T04:28:40.800Z - Finding user with mobile: 1111111111
+2026-05-13T04:28:43.616Z - User found: Yes
+2026-05-13T04:28:43.618Z - Checking password...
+2026-05-13T04:28:44.619Z - Password match: true
+2026-05-13T04:28:44.632Z - Login successful for user: 6a03fc3eef3a0493fe3316b1
+2026-05-13T07:08:04.611Z - POST /api/auth/login started
+2026-05-13T07:08:04.614Z - Connecting to DB...
+2026-05-13T07:08:07.303Z - DB Connected
+2026-05-13T07:08:07.305Z - Parsing request body...
+2026-05-13T07:08:07.332Z - Body parsed: {"mobileNumber":"1111111111","password":"111111"}
+2026-05-13T07:08:07.338Z - Finding user with mobile: 1111111111
+2026-05-13T07:08:08.639Z - User found: Yes
+2026-05-13T07:08:08.653Z - Checking password...
+2026-05-13T07:08:08.865Z - Password match: true
+2026-05-13T07:08:08.870Z - Login successful for user: 6a03fc3eef3a0493fe3316b1

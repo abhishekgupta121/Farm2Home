@@ -113,11 +113,12 @@ const Navbar = () => {
               <Languages size={16} className="text-slate-500" />
               <select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value as "en" | "hi")}
+                onChange={(e) => setLanguage(e.target.value as "en" | "hi" | "bn")}
                 className="bg-transparent text-sm text-slate-700 focus:outline-none cursor-pointer"
               >
                 <option value="en">EN</option>
                 <option value="hi">HI</option>
+                <option value="bn">BN</option>
               </select>
             </div>
             
@@ -193,11 +194,12 @@ const Navbar = () => {
               <Languages size={18} className="text-slate-500" />
               <select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value as "en" | "hi")}
+                onChange={(e) => setLanguage(e.target.value as "en" | "hi" | "bn")}
                 className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-sm text-slate-700 focus:outline-none"
               >
                 <option value="en">English</option>
                 <option value="hi">हिंदी</option>
+                <option value="bn">বাংলা</option>
               </select>
             </div>
 

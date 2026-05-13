@@ -4,10 +4,12 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Truck, CheckCircle, Package, ShieldCheck, ArrowRight, LogOut, ArrowLeft, Loader2, Clock, Search } from "lucide-react";
+import { useLanguage } from "@/lib/LanguageContext";
 import toast from "react-hot-toast";
 
 function DeliveryPortalContent() {
   const router = useRouter();
+  const { t, language, setLanguage } = useLanguage();
   const searchParams = useSearchParams();
   const urlOrderId = searchParams.get("orderId") || "";
 
@@ -109,11 +111,11 @@ function DeliveryPortalContent() {
                 <Truck size={28} />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Delivery Portal</h1>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{t('deliveryPortal')}</h1>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1.5 text-slate-500 text-xs font-bold uppercase tracking-widest">
                     <ShieldCheck size={12} className="text-blue-500" />
-                    Secure Handover
+                    {t('secureHandover')}
                   </div>
 
                 </div>
@@ -122,14 +124,33 @@ function DeliveryPortalContent() {
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-
+            <div className="flex gap-1 bg-white border border-slate-200 rounded-lg p-1 text-xs font-bold shadow-sm">
+              <button 
+                onClick={() => setLanguage('en')} 
+                className={`px-3 py-1.5 rounded-md transition-all ${language === 'en' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                English
+              </button>
+              <button 
+                onClick={() => setLanguage('hi')} 
+                className={`px-3 py-1.5 rounded-md transition-all ${language === 'hi' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                हिंदी
+              </button>
+              <button 
+                onClick={() => setLanguage('bn')} 
+                className={`px-3 py-1.5 rounded-md transition-all ${language === 'bn' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                বাংলা
+              </button>
+            </div>
 
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-4 sm:px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-2xl transition-all active:scale-95"
             >
               <LogOut size={18} />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline">{t('logout')}</span>
             </button>
           </div>
         </div>
@@ -141,12 +162,12 @@ function DeliveryPortalContent() {
         <div className="flex-1 space-y-6">
           <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-6 sm:p-8">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">Active Deliveries</h2>
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t('activeDeliveries')}</h2>
               <div className="relative w-64">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search Order ID..."
+                  placeholder={t('searchOrderId')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-blue-500 transition-all"
@@ -165,25 +186,25 @@ function DeliveryPortalContent() {
                   <div key={order._id} className="bg-slate-50 rounded-2xl p-5 border border-slate-100 hover:border-blue-300 transition-all">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <span className="text-xs font-black text-blue-600 uppercase tracking-widest">ID: #{order._id.slice(-8).toUpperCase()}</span>
-                        <h3 className="text-lg font-black text-slate-900 mt-1">{order.items[0]?.cropName || "Produce"}</h3>
-                        <p className="text-sm font-bold text-slate-500">Qty: {order.items.reduce((acc: number, item: any) => acc + item.quantity, 0)} kg</p>
+                        <span className="text-xs font-black text-blue-600 uppercase tracking-widest">{t('id')}: #{order._id.slice(-8).toUpperCase()}</span>
+                        <h3 className="text-lg font-black text-slate-900 mt-1">{order.items[0]?.cropName || t('produce')}</h3>
+                        <p className="text-sm font-bold text-slate-500">{t('qty')}: {order.items.reduce((acc: number, item: any) => acc + item.quantity, 0)} kg</p>
                       </div>
                       <button
                         onClick={() => setOrderId(order._id)}
                         className="px-4 py-2 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all text-sm"
                       >
-                        Select
+                        {t('select')}
                       </button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-medium text-slate-600 border-t border-slate-200 pt-3">
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase">From (Farmer)</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase">{t('fromFarmer')}</p>
                         <p className="font-bold text-slate-800">{order.items[0]?.farmerId?.name || "N/A"}</p>
                         <p>{order.items[0]?.farmerId?.mobileNumber || "N/A"}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase">To (Consumer)</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase">{t('toConsumer')}</p>
                         <p className="font-bold text-slate-800">{order.consumerId?.name || "N/A"}</p>
                         <p>{order.consumerId?.mobileNumber || "N/A"}</p>
                       </div>
@@ -196,7 +217,7 @@ function DeliveryPortalContent() {
                   return matchesStatus && matchesSearch;
                 }).length === 0 && (
                 <div className="text-center py-10 text-slate-400 font-bold">
-                  No {type === "pickup" ? "pickups" : "deliveries"} found.
+                  {type === "pickup" ? t('noPickupsFound') : t('noDeliveriesFound')}
                 </div>
               )}
             </div>
@@ -212,8 +233,8 @@ function DeliveryPortalContent() {
 
             <div className="relative z-10">
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-black text-slate-900 mb-1 tracking-tight">Verify Status</h2>
-                <p className="text-sm text-slate-500 font-bold">Update order status using secure OTPs.</p>
+                <h2 className="text-2xl font-black text-slate-900 mb-1 tracking-tight">{t('verifyStatus')}</h2>
+                <p className="text-sm text-slate-500 font-bold">{t('updateStatusDesc')}</p>
               </div>
 
               {/* Type Selector */}
@@ -227,7 +248,7 @@ function DeliveryPortalContent() {
                   }`}
                 >
                   <Package size={14} />
-                  Pickup
+                  {t('pickup')}
                 </button>
                 <button
                   onClick={() => setType("delivery")}
@@ -238,16 +259,16 @@ function DeliveryPortalContent() {
                   }`}
                 >
                   <CheckCircle size={14} />
-                  Delivery
+                  {t('delivery')}
                 </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Order ID</label>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{t('orderId')}</label>
                   <input
                     type="text"
-                    placeholder="Enter 24-char ID"
+                    placeholder={t('enterOrderId')}
                     value={orderId}
                     onChange={(e) => setOrderId(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all font-bold text-sm"
@@ -256,11 +277,11 @@ function DeliveryPortalContent() {
 
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                    {type === "pickup" ? "Farmer OTP" : "Consumer OTP"}
+                    {type === "pickup" ? t('farmerOtp') : t('consumerOtp')}
                   </label>
                   <input
                     type="text"
-                    placeholder="Enter 6-digit OTP"
+                    placeholder={t('enterOtp')}
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all font-bold tracking-[0.2em] text-center text-xl focus:bg-white"
@@ -280,7 +301,7 @@ function DeliveryPortalContent() {
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
                     <>
-                      Verify {type === "pickup" ? "Pickup" : "Delivery"}
+                      {type === "pickup" ? t('verifyPickup') : t('verifyDelivery')}
                       <ArrowRight size={16} />
                     </>
                   )}
@@ -293,9 +314,7 @@ function DeliveryPortalContent() {
                   : "bg-green-50 border-green-100 text-green-800"
               }`}>
                 <p className="text-[10px] font-bold uppercase tracking-widest leading-relaxed">
-                  {type === "pickup" 
-                    ? "Ask the farmer for the Pickup OTP. This will mark the order as SHIPPED."
-                    : "Ask the consumer for the Delivery OTP. This will mark the order as DELIVERED."}
+                  {type === "pickup" ? t('askFarmerOtp') : t('askConsumerOtp')}
                 </p>
               </div>
             </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { User, Star, ShieldAlert, Award, PackageCheck, TrendingUp, Leaf, Tractor, Camera } from "lucide-react";
 import FarmerNavbar from "@/app/components/FarmerNavbar";
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function FarmerProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -66,7 +67,7 @@ export default function FarmerProfilePage() {
     }
   };
 
-  const [lang, setLang] = useState<'en' | 'hi'>('en');
+  const { t, language: lang, setLanguage: setLang } = useLanguage();
   const [galleryImages, setGalleryImages] = useState<string[]>([
     "https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?auto=format&fit=crop&w=500&q=60",
     "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=500&q=60",
@@ -111,52 +112,7 @@ export default function FarmerProfilePage() {
     }
   };
 
-  const translations = {
-    en: {
-      title: "Quality & Trust Assurance",
-      purityTitle: "Chemical-Free Promise",
-      purityDesc: "Our crops are grown without any harmful chemicals. Purity is our identity.",
-      sourceTitle: "Direct from Source",
-      sourceDesc: "No middlemen involved. Packed directly from the farm to you.",
-      gradingTitle: "Quality Graded",
-      gradingDesc: "Every grain and vegetable is manually checked to ensure only the best quality reaches you.",
-      verified: "Verified",
-      farmerSince: "Farmer since 2010",
-      quality: "100% Quality",
-      rating: "Rating",
-      organic: "Organic",
-      pesticideFree: "Pesticide-Free",
-      totalCropsSold: "Total Crops Sold",
-      successfulOrders: "Successful Orders",
-      totalReviews: "Total Reviews",
-      farmGallery: "Farm Gallery",
-      recentReviews: "Recent Reviews",
-      noReviews: "No reviews yet.",
-      change: "Change"
-    },
-    hi: {
-      title: "गुणवत्ता और विश्वास का वादा",
-      purityTitle: "केमिकल-मुक्त वादा",
-      purityDesc: "हमारी फसलें बिना किसी हानिकारक रसायनों के उगाई जाती हैं। शुद्धता ही हमारी पहचान है।",
-      sourceTitle: "सीधे स्रोत से",
-      sourceDesc: "कोई बिचौलिया शामिल नहीं है। सीधे खेत से आपके पास पैक किया गया।",
-      gradingTitle: "गुणवत्ता ग्रेडिंग",
-      gradingDesc: "हर अनाज और सब्जी की मैन्युअल रूप से जांच की जाती है ताकि यह सुनिश्चित हो सके कि केवल सर्वोत्तम गुणवत्ता ही आप तक पहुंचे।",
-      verified: "सत्यापित",
-      farmerSince: "2010 से किसान",
-      quality: "100% गुणवत्ता",
-      rating: "रेटिंग",
-      organic: "ऑर्गेनिक",
-      pesticideFree: "कीटनाशक-मुक्त",
-      totalCropsSold: "कुल बेची गई फसल",
-      successfulOrders: "सफल ऑर्डर्स",
-      totalReviews: "कुल समीक्षाएं",
-      farmGallery: "फार्म गैलरी",
-      recentReviews: "हालिया समीक्षाएं",
-      noReviews: "अभी तक कोई समीक्षा नहीं।",
-      change: "बदलें"
-    }
-  };
+
 
   if (!user) return <div className="p-8 text-center flex items-center justify-center min-h-screen"><div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full"></div></div>;
 
@@ -181,6 +137,12 @@ export default function FarmerProfilePage() {
             >
               हिंदी
             </button>
+            <button 
+              onClick={() => setLang('bn')} 
+              className={`px-3 py-1.5 rounded-md transition-all ${lang === 'bn' ? 'bg-green-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            >
+              বাংলা
+            </button>
           </div>
         </div>
         
@@ -196,7 +158,7 @@ export default function FarmerProfilePage() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
             
             <label htmlFor="banner-upload" className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm text-slate-700 text-xs font-bold rounded-lg cursor-pointer shadow-sm border border-slate-200 hover:bg-white transition-all">
-              <Camera size={14} className="text-green-600" /> {lang === 'en' ? 'Change Banner' : 'बैनर बदलें'}
+              <Camera size={14} className="text-green-600" /> {t('changeBanner')}
             </label>
             <input 
               id="banner-upload" 
@@ -222,7 +184,7 @@ export default function FarmerProfilePage() {
                 <Camera size={14} />
               </label>
               <label htmlFor="profile-upload" className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer z-10">
-                <span className="text-xs font-bold">{translations[lang].change}</span>
+                <span className="text-xs font-bold">{t('fp_change')}</span>
               </label>
               <input 
                 id="profile-upload" 
@@ -239,7 +201,7 @@ export default function FarmerProfilePage() {
                   <div className="flex items-center gap-2">
                     <h1 className="text-3xl font-extrabold text-slate-900">{user.name}</h1>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500 text-white text-xs font-bold">
-                      <Award size={12} /> {translations[lang].verified}
+                      <Award size={12} /> {t('fp_verified')}
                     </span>
                   </div>
                   <p className="text-lg text-slate-600 font-medium mb-2">{user.farmName}</p>
@@ -247,23 +209,23 @@ export default function FarmerProfilePage() {
                 
                 <div className="flex gap-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 text-sm font-bold border border-green-100">
-                    <Award size={16} /> {translations[lang].farmerSince}
+                    <Award size={16} /> {t('fp_farmerSince')}
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-bold border border-emerald-100">
-                    <Leaf size={16} /> {translations[lang].quality}
+                    <Leaf size={16} /> {t('fp_quality')}
                   </span>
                 </div>
               </div>
               
               <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-50 text-yellow-700 text-sm font-bold border border-yellow-100">
-                  <Star size={16} fill="currentColor" /> {reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "N/A"} / 5.0 {translations[lang].rating}
+                  <Star size={16} fill="currentColor" /> {reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "N/A"} / 5.0 {t('fp_rating')}
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-bold border border-slate-200">
-                  # {translations[lang].organic}
+                  # {t('fp_organic')}
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-bold border border-slate-200">
-                  # {translations[lang].pesticideFree}
+                  # {t('fp_pesticideFree')}
                 </span>
               </div>
             </div>
@@ -275,13 +237,13 @@ export default function FarmerProfilePage() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 m-0">
               <TrendingUp className="text-green-600" size={24} />
-              {lang === 'en' ? 'Farmer Growth Dashboard' : 'किसान विकास डैशबोर्ड'}
+              {t('farmerGrowthDashboard')}
             </h2>
             <button 
               onClick={() => setIsEditingStats(!isEditingStats)}
               className="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-sm"
             >
-              {isEditingStats ? (lang === 'en' ? 'Save Stats' : 'सेव करें') : (lang === 'en' ? 'Update Stats' : 'अपडेट करें')}
+              {isEditingStats ? t('saveStats') : t('updateStats')}
             </button>
           </div>
 
@@ -289,7 +251,7 @@ export default function FarmerProfilePage() {
             {/* Card 1: Harvest */}
             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
               <p className="text-slate-500 font-semibold mb-1">
-                {isEditingStats ? (lang === 'en' ? 'Apni fasal ki matra bharein (kg)' : 'अपनी फसल की मात्रा भरें (kg)') : (lang === 'en' ? 'Total Yield Available' : 'कुल उपलब्ध उपज')}
+                {isEditingStats ? t('enterYieldKg') : t('totalYieldAvailable')}
               </p>
               {isEditingStats ? (
                 <div className="flex items-center gap-2 mt-2">
@@ -310,7 +272,7 @@ export default function FarmerProfilePage() {
             {/* Card 2: Legacy */}
             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
               <p className="text-slate-500 font-semibold mb-1">
-                {isEditingStats ? (lang === 'en' ? 'Kitne saalo se kheti kar rahe hain?' : 'कितने सालों से खेती कर रहे हैं?') : (lang === 'en' ? 'Farming Legacy' : 'खेती की विरासत')}
+                {isEditingStats ? t('howManyYearsFarming') : t('farmingLegacy')}
               </p>
               {isEditingStats ? (
                 <div className="mt-2">
@@ -318,7 +280,7 @@ export default function FarmerProfilePage() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h3 className="text-3xl font-black text-slate-900">{experience} <span className="text-base font-medium text-slate-500">Years</span></h3>
+                  <h3 className="text-3xl font-black text-slate-900">{experience} <span className="text-base font-medium text-slate-500">{t('years')}</span></h3>
                   <Award className="text-yellow-500" size={24} fill="currentColor" />
                 </div>
               )}
@@ -327,7 +289,7 @@ export default function FarmerProfilePage() {
             {/* Card 3: Trust */}
             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
               <p className="text-slate-500 font-semibold mb-1">
-                {isEditingStats ? (lang === 'en' ? 'Kitne logo tak maal pahuncha hai?' : 'कितने लोगों तक माल पहुंचा है?') : (lang === 'en' ? 'Happy Families' : 'खुशहाल परिवार')}
+                {isEditingStats ? t('howManyPeopleReached') : t('happyFamilies')}
               </p>
               {isEditingStats ? (
                 <div className="mt-2">
@@ -346,7 +308,7 @@ export default function FarmerProfilePage() {
         <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200">
           <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
             <Tractor className="text-green-600" size={24} />
-            {translations[lang].farmGallery}
+            {t('fp_farmGallery')}
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {galleryImages.map((img, index) => (
@@ -359,7 +321,7 @@ export default function FarmerProfilePage() {
                 </label>
                 
                 <label htmlFor={`gallery-upload-${index}`} className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10">
-                  <span className="text-xs font-bold">{translations[lang].change}</span>
+                  <span className="text-xs font-bold">{t('fp_change')}</span>
                 </label>
                 <input 
                   id={`gallery-upload-${index}`} 
@@ -378,14 +340,14 @@ export default function FarmerProfilePage() {
           <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200">
             <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
               <Star className="text-yellow-500" fill="currentColor" size={24} />
-              {translations[lang].recentReviews}
+              {t('fp_recentReviews')}
             </h2>
             <div className="space-y-6">
               {reviews.length > 0 ? (
                 reviews.slice(0, 3).map((review: any) => (
                   <div key={review._id} className="border-b border-slate-100 last:border-0 pb-6 last:pb-0">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="font-bold text-slate-800">{review.consumerId?.name || "Anonymous"}</span>
+                      <span className="font-bold text-slate-800">{review.consumerId?.name || t('anonymous')}</span>
                       <div className="flex text-yellow-400">
                         {[...Array(5)].map((_, j) => (
                           <Star key={j} size={14} fill={j < review.rating ? "currentColor" : "none"} className={j >= review.rating ? "text-slate-200" : ""} />
@@ -396,7 +358,7 @@ export default function FarmerProfilePage() {
                   </div>
                 ))
               ) : (
-                <p className="text-slate-500 font-medium text-center py-4">{translations[lang].noReviews}</p>
+                <p className="text-slate-500 font-medium text-center py-4">{t('fp_noReviews')}</p>
               )}
             </div>
           </div>
@@ -406,7 +368,7 @@ export default function FarmerProfilePage() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-emerald-900 flex items-center gap-2 m-0">
                 <Leaf className="text-emerald-500" size={24} />
-                {translations[lang].title}
+                {t('fp_title')}
               </h2>
             </div>
             
@@ -414,30 +376,30 @@ export default function FarmerProfilePage() {
               <div className="bg-white rounded-xl p-4 border border-emerald-100 space-y-2">
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="text-emerald-500" size={18} />
-                  <h4 className="font-bold text-emerald-900 m-0">{translations[lang].purityTitle}</h4>
+                  <h4 className="font-bold text-emerald-900 m-0">{t('fp_purityTitle')}</h4>
                 </div>
                 <p className="m-0 text-sm text-slate-600">
-                  {translations[lang].purityDesc}
+                  {t('fp_purityDesc')}
                 </p>
               </div>
 
               <div className="bg-white rounded-xl p-4 border border-emerald-100 space-y-2">
                 <div className="flex items-center gap-2">
                   <Tractor className="text-emerald-500" size={18} />
-                  <h4 className="font-bold text-emerald-900 m-0">{translations[lang].sourceTitle}</h4>
+                  <h4 className="font-bold text-emerald-900 m-0">{t('fp_sourceTitle')}</h4>
                 </div>
                 <p className="m-0 text-sm text-slate-600">
-                  {translations[lang].sourceDesc}
+                  {t('fp_sourceDesc')}
                 </p>
               </div>
 
               <div className="bg-white rounded-xl p-4 border border-emerald-100 space-y-2">
                 <div className="flex items-center gap-2">
                   <PackageCheck className="text-emerald-500" size={18} />
-                  <h4 className="font-bold text-emerald-900 m-0">{translations[lang].gradingTitle}</h4>
+                  <h4 className="font-bold text-emerald-900 m-0">{t('fp_gradingTitle')}</h4>
                 </div>
                 <p className="m-0 text-sm text-slate-600">
-                  {translations[lang].gradingDesc}
+                  {t('fp_gradingDesc')}
                 </p>
               </div>
             </div>

@@ -12,7 +12,7 @@ import FilterDrawer from "@/app/components/FilterDrawer";
 import FilterChips from "@/app/components/FilterChips";
 import ProductSkeleton from "@/app/components/ProductSkeleton";
 import toast from "react-hot-toast";
-import { translations } from "@/lib/translations";
+import { useLanguage } from "@/lib/LanguageContext";
 
 const formatAddress = (addr: any, pinCode: string, fallback: string) => {
   if (!addr) return fallback || pinCode;
@@ -29,6 +29,7 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
   const minQty = Math.min(["vegetable", "fruit"].includes(crop.category || "") ? 5 : 20, crop.availableQuantityKg || 1);
   const [quantity, setQuantity] = useState<number | string>(minQty);
   const [added, setAdded] = useState(false);
+  const { t } = useLanguage();
 
   const pulseImages: { [key: string]: string } = {
     moong: "https://5.imimg.com/data5/SELLER/Default/2025/9/543231555/LO/GS/HR/45333637/30kg-moong-daal-1000x1000.jpeg",
@@ -102,7 +103,7 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
           </span>
           {crop.isOrganic && (
             <span className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg bg-green-100 text-green-700 border border-green-200">
-              Organic
+              {t('organic')}
             </span>
           )}
         </div>
@@ -116,13 +117,13 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
           </div>
           <div className="text-right">
             <div className="text-2xl font-black text-slate-900 leading-none">₹{crop.pricePerKg}</div>
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">per kg</div>
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{t('perKg')}</div>
           </div>
         </div>
 
         <div className="bg-slate-50 rounded-2xl p-4 my-6 space-y-3 flex-1 border border-slate-100">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-500 font-bold">Farmer</span>
+            <span className="text-slate-500 font-bold">{t('farmer')}</span>
             <span className="text-slate-900 font-black flex items-center gap-1">
               {crop.farmerName}
               {crop.isVerifiedFarmer && (
@@ -131,19 +132,19 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
             </span>
           </div>
           <div className="flex flex-col text-sm">
-            <span className="text-slate-500 font-bold mb-1">Full Address</span>
+            <span className="text-slate-500 font-bold mb-1">{t('fullAddress')}</span>
             <span className="text-slate-900 font-bold capitalize leading-tight">{formatAddress(crop.farmerId?.address, crop.pinCode, crop.location)}</span>
           </div>
           <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200">
-            <span className="text-slate-500 font-bold">Listed On</span>
+            <span className="text-slate-500 font-bold">{t('listedOn')}</span>
             <span className="text-slate-900 font-black">{new Date(crop.createdAt).toLocaleDateString()}</span>
           </div>
           <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200">
-            <span className="text-slate-500 font-bold">Availability</span>
+            <span className="text-slate-500 font-bold">{t('availability')}</span>
             {crop.availableQuantityKg > 0 ? (
               <span className="text-green-600 font-black">{crop.availableQuantityKg} kg</span>
             ) : (
-              <span className="text-red-500 font-black">Out of Stock</span>
+              <span className="text-red-500 font-black">{t('outOfStock')}</span>
             )}
           </div>
         </div>
@@ -160,7 +161,7 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
                   onChange={handleQtyChange}
                   onBlur={handleQtyBlur}
                   className="w-full h-full py-4 pl-4 pr-8 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all placeholder:text-slate-400"
-                  placeholder="Qty"
+                  placeholder={t('qty')}
                 />
                 <span className="absolute right-3 text-[10px] font-black text-slate-400 uppercase pointer-events-none">kg</span>
               </div>
@@ -173,12 +174,12 @@ function ProductCard({ crop, addToCart }: { crop: any; addToCart: (id: string, q
               disabled={quantity === '' || Number(quantity) < minQty}
               className={`flex-1 py-4 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg active:scale-95 group-hover:shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed ${added ? 'bg-green-600 hover:bg-green-700 shadow-green-500/20' : 'bg-slate-900 hover:bg-orange-600'}`}
             >
-              {added ? "Added ✓" : "Add to Cart"}
+              {added ? t('added') : t('addToCart')}
             </button>
           </div>
         ) : (
           <button disabled className="w-full mt-auto py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-sm uppercase tracking-widest cursor-not-allowed">
-            Out of Stock
+            {t('outOfStock')}
           </button>
         )}
       </div>
@@ -194,14 +195,7 @@ function DashboardContent() {
   const [user, setUser] = useState<any>(null);
   const [crops, setCrops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lang, setLang] = useState<'en' | 'hi'>('en');
-
-  useEffect(() => {
-    const savedLang = localStorage.getItem("lang") as 'en' | 'hi';
-    if (savedLang) {
-      setLang(savedLang);
-    }
-  }, []);
+  const { t, language: lang, setLanguage } = useLanguage();
 
   const [totalProducts, setTotalProducts] = useState(0);
   const [orders, setOrders] = useState<any[]>([]);
@@ -392,7 +386,7 @@ function DashboardContent() {
                 <ShoppingCart size={28} />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Marketplace</h1>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{t('marketplace')}</h1>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1.5 text-slate-500 text-xs font-bold uppercase tracking-widest">
                     <MapPin size={12} className="text-orange-500" />
@@ -420,7 +414,7 @@ function DashboardContent() {
               <input 
                 type="text"
                 id="marketplace-search"
-                placeholder="Search crops, farmers, categories..."
+                placeholder={t('cd_searchPlaceholder')}
                 value={currentFilters.search}
                 onChange={handleSearchChange}
                 className="flex-1 bg-transparent py-3.5 pr-3 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none text-sm"
@@ -434,7 +428,7 @@ function DashboardContent() {
                 </button>
               )}
               <button className="m-1.5 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-200 shadow-md shadow-orange-500/20 active:scale-95 shrink-0">
-                Search
+                {t('cd_search')}
               </button>
             </div>
           </div>
@@ -445,7 +439,7 @@ function DashboardContent() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">{translations[lang].cd_digitalWallet}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">{t('cd_digitalWallet')}</p>
                 <p className="text-sm font-black leading-none">₹{user.walletBalance || 0}</p>
               </div>
             </div>
@@ -455,7 +449,7 @@ function DashboardContent() {
               className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm active:scale-95"
             >
               <ShoppingBag size={18} className="text-orange-500" />
-              {translations[lang].cd_myOrders}
+              {t('cd_myOrders')}
             </button>
 
             <Link href="/cart" className="relative p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-orange-50 hover:text-orange-600 transition-colors">
@@ -467,16 +461,22 @@ function DashboardContent() {
 
             <div className="flex gap-1 bg-white border border-slate-200 rounded-lg p-1 text-xs font-bold shadow-sm">
               <button 
-                onClick={() => { setLang('en'); localStorage.setItem('lang', 'en'); }} 
+                onClick={() => setLanguage('en')} 
                 className={`px-3 py-1.5 rounded-md transition-all ${lang === 'en' ? 'bg-orange-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
               >
                 English
               </button>
               <button 
-                onClick={() => { setLang('hi'); localStorage.setItem('lang', 'hi'); }} 
+                onClick={() => setLanguage('hi')} 
                 className={`px-3 py-1.5 rounded-md transition-all ${lang === 'hi' ? 'bg-orange-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
               >
                 हिंदी
+              </button>
+              <button 
+                onClick={() => setLanguage('bn')} 
+                className={`px-3 py-1.5 rounded-md transition-all ${lang === 'bn' ? 'bg-orange-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                বাংলা
               </button>
             </div>
 
@@ -485,7 +485,7 @@ function DashboardContent() {
               className="flex items-center gap-2 px-4 sm:px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-2xl transition-all active:scale-95"
             >
               <LogOut size={18} />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline">{t('logout')}</span>
             </button>
           </div>
         </div>
@@ -509,21 +509,21 @@ function DashboardContent() {
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">{translations[lang].cd_products}</h2>
-                <p className="text-slate-500 font-bold text-sm uppercase tracking-widest mt-1">{translations[lang].cd_showingResults.replace('{totalProducts}', totalProducts.toString())}</p>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t('cd_products')}</h2>
+                <p className="text-slate-500 font-bold text-sm uppercase tracking-widest mt-1">{t('cd_showingResults').replace('{totalProducts}', totalProducts.toString())}</p>
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
-                <span className="text-sm font-bold text-slate-500 whitespace-nowrap">{translations[lang].cd_sortBy}</span>
+                <span className="text-sm font-bold text-slate-500 whitespace-nowrap">{t('cd_sortBy')}</span>
                 <select 
                   value={currentFilters.sort}
                   onChange={handleSortChange}
                   className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-orange-500 cursor-pointer w-full sm:w-auto"
                 >
-                  <option value="newest">{translations[lang].cd_newest}</option>
-                  <option value="price_asc">{translations[lang].cd_priceAsc}</option>
-                  <option value="price_desc">{translations[lang].cd_priceDesc}</option>
-                  <option value="popular">{translations[lang].cd_popular}</option>
+                  <option value="newest">{t('cd_newest')}</option>
+                  <option value="price_asc">{t('cd_priceAsc')}</option>
+                  <option value="price_desc">{t('cd_priceDesc')}</option>
+                  <option value="popular">{t('cd_popular')}</option>
                 </select>
               </div>
             </div>
@@ -539,10 +539,10 @@ function DashboardContent() {
                 <div className="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Search size={48} className="text-slate-300" />
                 </div>
-                <h4 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">{translations[lang].cd_noProducts}</h4>
-                <p className="text-slate-500 font-medium max-w-md mx-auto">{translations[lang].cd_noProductsDesc}</p>
+                <h4 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">{t('cd_noProducts')}</h4>
+                <p className="text-slate-500 font-medium max-w-md mx-auto">{t('cd_noProductsDesc')}</p>
                 <button onClick={clearAllFilters} className="mt-8 px-8 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20">
-                  {translations[lang].cd_clearAllFilters}
+                  {t('cd_clearAllFilters')}
                 </button>
               </div>
             ) : (
@@ -585,9 +585,9 @@ function DashboardContent() {
               <div>
                 <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                   <ShoppingBag className="text-orange-500" size={32} />
-                  {translations[lang].cd_orderHistory}
+                  {t('cd_orderHistory')}
                 </h2>
-                <p className="text-slate-500 font-bold">{translations[lang].cd_orderHistoryDesc}</p>
+                <p className="text-slate-500 font-bold">{t('cd_orderHistoryDesc')}</p>
               </div>
               <div className="flex items-center gap-3">
                 <button onClick={() => user && fetchOrders(user._id)} className="p-3 bg-slate-50 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-2xl transition-all">
@@ -603,8 +603,8 @@ function DashboardContent() {
               {orders.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-[2rem] border border-dashed border-slate-200">
                   <ShoppingBag className="mx-auto text-slate-200 mb-6" size={80} />
-                  <h3 className="text-2xl font-black text-slate-900 mb-2">{translations[lang].cd_noOrders}</h3>
-                  <p className="text-slate-500 font-bold max-w-xs mx-auto">{translations[lang].cd_noOrdersDesc}</p>
+                  <h3 className="text-2xl font-black text-slate-900 mb-2">{t('cd_noOrders')}</h3>
+                  <p className="text-slate-500 font-bold max-w-xs mx-auto">{t('cd_noOrdersDesc')}</p>
                 </div>
               ) : (
                 orders.map((order) => (
@@ -614,7 +614,7 @@ function DashboardContent() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-3 mb-2">
                           <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black tracking-widest uppercase">
-                            {translations[lang].cd_orderId}{order._id}
+                            {t('cd_orderId')}{order._id}
                           </span>
                           <span className="px-3 py-1 bg-orange-500 text-white rounded-lg text-[10px] font-black tracking-widest uppercase">
                             OTP: {order.consumerOtp || "N/A"}
@@ -634,10 +634,10 @@ function DashboardContent() {
                         </div>
                       </div>
                       <div className="text-left lg:text-right">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Payment</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('cd_totalAmount')}</p>
                         <p className="text-3xl font-black text-slate-900 tracking-tighter">₹{order.totalAmount}</p>
                         <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${order.paymentStatus === 'paid' ? 'text-amber-500' : 'text-green-600'}`}>
-                          {order.paymentStatus === 'paid' ? '● Held in Escrow' : '● Released to Farmer'}
+                          {order.paymentStatus === 'paid' ? t('heldInEscrow') : t('releasedToFarmer')}
                         </p>
                       </div>
                     </div>
@@ -653,9 +653,9 @@ function DashboardContent() {
                           </div>
                           <div className="sm:text-right flex items-center gap-4 border-l-2 border-slate-200 pl-6 h-full">
                             <div>
-                              <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Farmer & Farm House</p>
+                              <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">{t('farmerAndFarmHouse')}</p>
                               <p className="text-sm font-black text-slate-900">{item.farmerId?.farmName || item.farmerId?.name || "Premium Farm"}</p>
-                              <p className="text-[10px] font-bold text-slate-500">Contact: {item.farmerId?.mobileNumber || "N/A"}</p>
+                              <p className="text-[10px] font-bold text-slate-500">{t('contact')}: {item.farmerId?.mobileNumber || "N/A"}</p>
                             </div>
                             <UserIcon className="text-slate-200 hidden sm:block" size={24} />
                           </div>
@@ -666,23 +666,23 @@ function DashboardContent() {
                       {order.orderStatus === 'placed' && (
                         <button 
                           onClick={async () => {
-                            if (confirm("Are you sure you want to cancel this order and get a refund?")) {
+                            if (confirm(t('confirmCancel'))) {
                               try {
                                 const res = await fetch(`/api/orders/${order._id}/refund`, { method: "POST" });
                                 if (res.ok) {
-                                  toast.success("Refund processed successfully!");
+                                  toast.success(t('refundSuccess'));
                                   fetchOrders(user._id);
                                   refreshWallet(user._id);
                                 } else {
                                   const data = await res.json();
                                   toast.error(data.error);
                                 }
-                              } catch (err) { toast.error("Refund failed"); }
+                              } catch (err) { toast.error(t('refundFailed')); }
                             }
                           }}
                           className="flex-1 py-4 bg-red-50 text-red-600 hover:bg-red-100 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95"
                         >
-                          Cancel & Refund
+                          {t('cancelRefund')}
                         </button>
                       )}
                       <button 
@@ -690,7 +690,7 @@ function DashboardContent() {
                         disabled={order.orderStatus !== 'delivered'}
                         className="flex-1 py-4 bg-slate-900 text-white hover:bg-orange-600 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
                       >
-                        Rate Farmer
+                        {t('rateFarmer')}
                       </button>
                     </div>
                   </div>
@@ -698,8 +698,8 @@ function DashboardContent() {
               )}
             </div>
             <div className="bg-white px-8 py-6 border-t border-slate-200 flex justify-between items-center">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Showing {orders.length} transactions</p>
-              <button onClick={() => setShowOrders(false)} className="px-8 py-3 bg-slate-100 text-slate-600 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all">Close History</button>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('showingTransactions').replace('{count}', orders.length.toString())}</p>
+              <button onClick={() => setShowOrders(false)} className="px-8 py-3 bg-slate-100 text-slate-600 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all">{t('closeHistory')}</button>
             </div>
           </div>
         </div>

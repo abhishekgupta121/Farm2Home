@@ -122,13 +122,19 @@ export default function HomePage() {
               >
                 हिं
               </button>
+              <button 
+                onClick={() => setLanguage("bn")}
+                className={`px-4 py-1.5 text-xs font-black rounded-xl transition-all duration-300 ${language === 'bn' ? 'bg-white text-emerald-900 shadow-lg scale-105' : 'text-emerald-100/50 hover:text-white hover:bg-white/5'}`}
+              >
+                বাং
+              </button>
             </div>
             
             <button 
               onClick={() => router.push("/login")}
               className="hidden sm:flex items-center gap-2 text-sm font-black text-emerald-900 px-6 py-3 rounded-2xl bg-white hover:bg-amber-400 transition-all duration-300 shadow-lg hover:-translate-y-1 active:scale-95"
             >
-              Login
+              {t("login")}
             </button>
           </div>
         </nav>

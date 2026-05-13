@@ -6,7 +6,7 @@ import { LogOut, Tractor, Package, Bell, ShoppingBag, ArrowRight, Trash2, Plus, 
 import Link from "next/link";
 import FarmerNavbar from "@/app/components/FarmerNavbar";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { translations } from "@/lib/translations";
+
 import { useLanguage } from "@/lib/LanguageContext";
 
 export default function FarmerDashboard() {
@@ -17,7 +17,7 @@ export default function FarmerDashboard() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { language: lang } = useLanguage();
+  const { t, language: lang } = useLanguage();
 
 
   useEffect(() => {
@@ -212,19 +212,19 @@ export default function FarmerDashboard() {
           {/* Top Summary Section */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-green-300 transition-colors cursor-pointer">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].fd_activeListings}</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('fd_activeListings')}</span>
               <span className="text-3xl font-black text-slate-900">{listings.filter(l => l.status === 'active').length}</span>
             </div>
             <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-orange-300 transition-colors cursor-pointer">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].fd_totalOrders}</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('fd_totalOrders')}</span>
               <span className="text-3xl font-black text-slate-900">{orders.length}</span>
             </div>
             <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-blue-300 transition-colors cursor-pointer">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].fd_walletBalance}</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('fd_walletBalance')}</span>
               <span className="text-3xl font-black text-blue-600">₹{user.walletBalance || 0}</span>
             </div>
             <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1 hover:border-yellow-300 transition-colors cursor-pointer">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].fd_avgRating}</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('fd_avgRating')}</span>
               <span className="text-3xl font-black text-yellow-500 flex items-center gap-1">
                 {reviews.length > 0 
                   ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
@@ -243,17 +243,17 @@ export default function FarmerDashboard() {
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                   <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
                     <Truck size={22} className="text-blue-500" />
-                    Active Deliveries
+                    {t('activeDeliveries')}
                   </h3>
                   <span className="bg-blue-100 text-blue-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
-                    {deliveries.filter(d => d.status !== 'delivered').length} In Progress
+                    {deliveries.filter(d => d.status !== 'delivered').length} {t('inProgress')}
                   </span>
                 </div>
                 <div className="p-6">
                   {deliveries.length === 0 ? (
                     <div className="text-center py-8">
                       <Package size={48} className="text-slate-200 mx-auto mb-3" />
-                      <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No active deliveries</p>
+                      <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">{t('noActiveDeliveries')}</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -264,8 +264,8 @@ export default function FarmerDashboard() {
                               <Package size={24} className="text-slate-400" />
                             </div>
                             <div>
-                              <p className="font-black text-slate-900">{delivery.cropId?.cropName || "Unknown Crop"}</p>
-                              <p className="text-xs font-bold text-slate-500">Customer: {delivery.consumerId?.name}</p>
+                              <p className="font-black text-slate-900">{delivery.cropId?.cropName || t('unknownCrop')}</p>
+                              <p className="text-xs font-bold text-slate-500">{t('customer')}: {delivery.consumerId?.name}</p>
                               <div className="flex items-center gap-2 mt-2">
                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
                                   delivery.status === 'pending' ? 'bg-amber-100 text-amber-700' :
@@ -293,15 +293,15 @@ export default function FarmerDashboard() {
               <div className="grid grid-cols-3 gap-4">
                 <Link href="/farmer" className="bg-green-600 hover:bg-green-700 text-white rounded-2xl p-6 flex flex-col items-center justify-center gap-2 transition-all hover:-translate-y-1 shadow-lg shadow-green-600/20 active:scale-95">
                   <Plus size={28} />
-                  <span className="font-bold text-sm">{translations[lang].fd_uploadCrop}</span>
+                  <span className="font-bold text-sm">{t('fd_uploadCrop')}</span>
                 </Link>
                 <Link href="/farmer/ugly-sell" className="bg-orange-500 hover:bg-orange-600 text-white rounded-2xl p-6 flex flex-col items-center justify-center gap-2 transition-all hover:-translate-y-1 shadow-lg shadow-orange-500/20 active:scale-95">
                   <Package size={28} />
-                  <span className="font-bold text-sm">{translations[lang].fd_uglySell}</span>
+                  <span className="font-bold text-sm">{t('fd_uglySell')}</span>
                 </Link>
                 <Link href="/farmer/pre-list" className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl p-6 flex flex-col items-center justify-center gap-2 transition-all hover:-translate-y-1 shadow-lg shadow-blue-600/20 active:scale-95">
                   <Package size={28} />
-                  <span className="font-bold text-sm">{translations[lang].fd_preList}</span>
+                  <span className="font-bold text-sm">{t('fd_preList')}</span>
                 </Link>
               </div>
 
@@ -310,15 +310,15 @@ export default function FarmerDashboard() {
                 <div className="flex justify-between items-center mb-8">
                   <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
                     <Package className="text-green-600" size={28} />
-                    {translations[lang].fd_yourListings}
+                    {t('fd_yourListings')}
                   </h2>
-                  <Link href="/farmer" className="text-green-600 text-sm font-black uppercase tracking-widest hover:underline">{translations[lang].fd_addNew}</Link>
+                  <Link href="/farmer" className="text-green-600 text-sm font-black uppercase tracking-widest hover:underline">{t('fd_addNew')}</Link>
                 </div>
                 
                 {listings.length === 0 ? (
                   <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                     <Package size={48} className="mx-auto text-slate-300 mb-4" />
-                    <p className="text-slate-500 font-bold">{translations[lang].fd_noListings}</p>
+                    <p className="text-slate-500 font-bold">{t('fd_noListings')}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -359,8 +359,8 @@ export default function FarmerDashboard() {
                             </div>
                             <div className="mt-3">
                               <div className="flex justify-between text-xs font-bold text-slate-600 mb-1">
-                                <span>{translations[lang].fd_available}: {listing.availableQuantityKg}kg</span>
-                                <span>{translations[lang].fd_sold}: {sold}kg</span>
+                                <span>{t('fd_available')}: {listing.availableQuantityKg}kg</span>
+                                <span>{t('fd_sold')}: {sold}kg</span>
                               </div>
                               <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                                 <div 
@@ -409,13 +409,13 @@ export default function FarmerDashboard() {
               <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
                 <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
                   <MapPin className="text-orange-500" size={24} />
-                  Logistics Settings
+                  {t('logisticsSettings')}
                 </h2>
                 <div className="space-y-6">
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div>
-                      <p className="font-black text-slate-800">Home Delivery</p>
-                      <p className="text-xs text-slate-500 font-bold">Offer doorstep delivery to customers</p>
+                      <p className="font-black text-slate-800">{t('homeDelivery')}</p>
+                      <p className="text-xs text-slate-500 font-bold">{t('homeDeliveryDesc')}</p>
                     </div>
                     <div className="w-12 h-6 bg-green-500 rounded-full relative cursor-pointer shadow-inner">
                       <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-md"></div>
@@ -423,23 +423,23 @@ export default function FarmerDashboard() {
                   </div>
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div>
-                      <p className="font-black text-slate-800">Farm Pickup</p>
-                      <p className="text-xs text-slate-500 font-bold">Allow customers to collect from farm</p>
+                      <p className="font-black text-slate-800">{t('farmPickup')}</p>
+                      <p className="text-xs text-slate-500 font-bold">{t('farmPickupDesc')}</p>
                     </div>
                     <div className="w-12 h-6 bg-green-500 rounded-full relative cursor-pointer shadow-inner">
                       <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-md"></div>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Delivery Radius (km)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('deliveryRadius')}</label>
                     <input type="number" defaultValue="25" className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 focus:outline-none focus:border-green-500" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Estimated Prep Time (days)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('prepTime')}</label>
                     <input type="number" defaultValue="2" className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 focus:outline-none focus:border-green-500" />
                   </div>
                   <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95">
-                    Save Logistics
+                    {t('saveLogistics')}
                   </button>
                 </div>
               </div>
@@ -452,18 +452,18 @@ export default function FarmerDashboard() {
               
               {/* Farm Performance Section */}
               <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-                <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">{translations[lang].fd_farmPerformance}</h2>
+                <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">{t('fd_farmPerformance')}</h2>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">{translations[lang].fd_totalOrders}</span>
+                    <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">{t('fd_totalOrders')}</span>
                     <span className="font-black text-slate-900">{orders.length}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">{translations[lang].fd_walletBalance}</span>
+                    <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">{t('fd_walletBalance')}</span>
                     <span className="font-black text-blue-600">₹{user.walletBalance || 0}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">{translations[lang].fd_quantitySold}</span>
+                    <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">{t('fd_quantitySold')}</span>
                     <span className="font-black text-slate-900">
                       {orders.reduce((acc, o) => {
                         const farmerItems = o.items ? o.items.filter((item: any) => item.farmerId?._id === user?._id) : [];
@@ -473,13 +473,13 @@ export default function FarmerDashboard() {
                   </div>
                 </div>
                 <Link href="/farmer/profile" className="block w-full text-center mt-6 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-sm transition-all active:scale-95">
-                  {translations[lang].fd_viewProfile}
+                  {t('fd_viewProfile')}
                 </Link>
               </div>
 
               {/* Recent Reviews Section */}
               <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-                <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">{translations[lang].fd_recentReviews}</h2>
+                <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">{t('fd_recentReviews')}</h2>
                 <div className="space-y-4">
                   {reviews.slice(0, 3).map((review: any) => (
                     <div key={review._id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
@@ -496,7 +496,7 @@ export default function FarmerDashboard() {
                     </div>
                   ))}
                   {reviews.length === 0 && (
-                    <p className="text-slate-500 font-medium text-center py-4">{translations[lang].fd_noReviews}</p>
+                    <p className="text-slate-500 font-medium text-center py-4">{t('fd_noReviews')}</p>
                   )}
                 </div>
               </div>

@@ -174,7 +174,7 @@ export default function FarmerNavbar() {
 
             {/* Language Switcher */}
             <div className="flex items-center gap-1 bg-black/20 p-1 rounded-xl border border-white/10">
-              {(["en", "hi"] as const).map((lang) => (
+              {(["en", "hi", "bn"] as const).map((lang) => (
                 <button
                   key={lang}
                   onClick={() => setLanguage(lang)}
@@ -183,7 +183,7 @@ export default function FarmerNavbar() {
                       : "text-emerald-100/50 hover:text-white hover:bg-white/10"
                     }`}
                 >
-                  {lang === "en" ? "EN" : "हिं"}
+                  {lang === "en" ? "EN" : lang === "hi" ? "हिं" : "বাং"}
                 </button>
               ))}
             </div>
@@ -269,7 +269,7 @@ export default function FarmerNavbar() {
             {/* Language + Logout */}
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-1 bg-black/20 p-1 rounded-xl border border-white/10">
-                {(["en", "hi"] as const).map((lang) => (
+                {(["en", "hi", "bn"] as const).map((lang) => (
                   <button
                     key={lang}
                     onClick={() => setLanguage(lang)}
@@ -278,7 +278,7 @@ export default function FarmerNavbar() {
                         : "text-emerald-100/50 hover:text-white"
                       }`}
                   >
-                    {lang === "en" ? "EN" : "हिं"}
+                    {lang === "en" ? "EN" : lang === "hi" ? "हिं" : "বাং"}
                   </button>
                 ))}
               </div>
