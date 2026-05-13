@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Truck, CheckCircle, Package, ShieldCheck, ArrowRight, LogOut, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 
-export default function AdminDeliveryPortal() {
+function AdminDeliveryPortalContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlOrderId = searchParams.get("orderId") || "";
@@ -214,6 +214,18 @@ export default function AdminDeliveryPortal() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AdminDeliveryPortal() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full"></div>
+      </div>
+    }>
+      <AdminDeliveryPortalContent />
+    </Suspense>
   );
 }
 
