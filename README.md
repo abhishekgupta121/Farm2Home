@@ -13,7 +13,7 @@ This project was built for a **Hackathon** and features a premium, accessible UI
   - **Consumer Portal**: Browse fresh produce, manage a cart, and place orders.
   - **Delivery Partner**: Manage and track deliveries.
   - **Admin Dashboard**: Oversee platform activity and approvals.
-- **🌐 Multi-Language Support**: Includes support for regional languages like **Bengali** to ensure accessibility for farmers.
+- **🌐 Multi-Language Support**: Includes support for regional languages like English,Hindi **Bengali** to ensure accessibility for farmers.
 - **📊 Real-Time Analytics**: Interactive charts using Recharts to track sales and inventory.
 - **🛒 Seamless Shopping**: Context-aware cart management and secure checkout flow.
 - **🔒 Secure Authentication**: JWT-based authentication with hashed passwords (bcrypt).
